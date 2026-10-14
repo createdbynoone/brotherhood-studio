@@ -5,7 +5,7 @@ BMP (Brotherhood Marketing Prompts) y Sorter (triage de generaciones) en una sol
 **Build:** `brew install qt cmake ninja` · `cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=$(brew --prefix qt) && cmake --build build` → `build/Brotherhood Studio.app`.
 **Release:** `tools/release.sh` (build Release, `macdeployqt`, firma ad-hoc, zip `Brotherhood-Studio-X.Y.Z-arm64-mac.zip`).
 **Fuente de marca:** `resources/fonts/Sequel100Black-75.ttf` NO está en git (licencia). Copiarla desde `Brotherhood/Branding/Brand Resources/TIPOGRAFÍAS/`. Sin ella el wordmark cae a Geist Bold.
-**Ícono:** `resources/AppIcon.icon` (Icon Composer, hecho a medida con apariencias clara, oscura y tintable) se compila con `actool` en cada build (Assets.car + .icns). No aplicar desplazamientos propios: el centrado ya viene en el dibujo.
+**Ícono:** `resources/AppIcon.icon` (Icon Composer, hecho a medida con apariencias clara, oscura y tintable) se compila con `actool` en cada build (Assets.car + .icns). La carpeta DEBE llamarse `AppIcon.icon` (actool busca ese nombre). No aplicar desplazamientos propios: el centrado ya viene en el diseño.
 
 ## Estructura
 ```
