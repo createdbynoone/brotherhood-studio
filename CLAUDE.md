@@ -50,6 +50,7 @@ tools/         gen_prompts.py, gen_icons.py, uitest.swift, release.sh
 ## Actualizaciones
 Al abrir, `StudioController::checkForUpdate` consulta `releases/latest` de `createdbynoone/brotherhood-studio`. Si hay versión nueva, la barra superior ofrece "Install": descarga el zip del release, y un script reemplaza el .app y lo reabre.
 
+GitHub responde 403 a peticiones sin `User-Agent` (Qt no lo envía solo): `StudioController` lo pone en el chequeo y en la descarga. `BS_VERSION_OVERRIDE=1.0.0` hace que la app se crea una versión anterior para probar el flujo contra releases reales.
 Prueba local del actualizador sin publicar nada: servir un `latest.json` (formato de la API de releases: `tag_name`, `html_url`, `assets[].name/browser_download_url`) con `python3 -m http.server` y arrancar con `BS_UPDATE_API=http://localhost:8765/latest.json`. La app reemplaza su propio .app por el zip, quita cuarentena y se reabre.
 Cada release está firmado ad-hoc: macOS puede volver a pedir el permiso de Documentos tras actualizar. El token de desbloqueo del Keychain usa ACL abierta justamente para no pedir permiso en cada versión.
 

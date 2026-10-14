@@ -104,6 +104,8 @@ void StudioController::checkForUpdate() {
     const QString api = qEnvironmentVariable("BS_UPDATE_API", QStringLiteral("https://api.github.com/repos/%1/releases/latest").arg(kRepo));
     QNetworkRequest req{QUrl(api)};
     req.setRawHeader("Accept", "application/vnd.github+json");
+    // GitHub answers 403 to requests without a User-Agent, and Qt does not send one by default.
+    req.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("Brotherhood-Studio/%1").arg(version()));
     req.setTransferTimeout(8000);
     QNetworkReply *reply = m_nam->get(req);
     connect(reply, &QNetworkReply::finished, this, [this, reply] {
@@ -143,6 +145,7 @@ void StudioController::installUpdate() {
     const QString zip = QDir::tempPath() + "/brotherhood-studio-update.zip";
     QFile::remove(zip);
     QNetworkRequest req(m_updateAsset);
+    req.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("Brotherhood-Studio/%1").arg(version()));
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     QNetworkReply *reply = m_nam->get(req);
     connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 got, qint64 total) {

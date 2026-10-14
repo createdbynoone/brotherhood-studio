@@ -17,7 +17,8 @@ int main(int argc, char *argv[]) {
     QGuiApplication app(argc, argv);
     QGuiApplication::setApplicationName("Brotherhood Studio");
     QGuiApplication::setOrganizationName("Brotherhood");
-    QGuiApplication::setApplicationVersion(QStringLiteral(APP_VERSION));
+    // BS_VERSION_OVERRIDE pretends to be an older build so the update flow can be tested against real releases
+    QGuiApplication::setApplicationVersion(qEnvironmentVariable("BS_VERSION_OVERRIDE", QStringLiteral(APP_VERSION)));
     QQuickStyle::setStyle("Basic");
     Mac::setDarkAppearance();
 
