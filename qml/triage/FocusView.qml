@@ -8,11 +8,24 @@ FocusScope {
     readonly property var entry: triage.focusEntry
     property real zoom: 1
     property point pan: Qt.point(0, 0)
-    property point panStart: Qt.point(0, 0)
     signal exportRequested(string path)
     property Item inspectorItem: null
 
-    function resetView() { zoom = 1; pan = Qt.point(0, 0); panStart = Qt.point(0, 0) }
+    function resetView() { zoom = 1; pan = Qt.point(0, 0) }
+    function setPan(x, y) {   // keep the picture from being thrown off-screen
+        const lx = stage.width * (zoom - 1) / 2 + 80, ly = stage.height * (zoom - 1) / 2 + 80
+        pan = Qt.point(Math.max(-lx, Math.min(lx, x)), Math.max(-ly, Math.min(ly, y)))
+    }
+    function panBy(dx, dy) { setPan(pan.x + dx, pan.y + dy) }
+    function zoomTo(nz, sx, sy) {   // zoom keeping the point under (sx, sy) fixed; layer scales about the stage centre
+        nz = Math.max(1, Math.min(10, nz))
+        const ox = stage.width / 2, oy = stage.height / 2, k = nz / zoom
+        const px = nz <= 1.001 ? 0 : sx - ox - k * (sx - ox - pan.x)
+        const py = nz <= 1.001 ? 0 : sy - oy - k * (sy - oy - pan.y)
+        zoom = nz
+        setPan(px, py)
+    }
+    function zoomAt(sx, sy, f) { zoomTo(zoom * f, sx, sy) }
     onEntryChanged: resetView()
     Component.onCompleted: forceActiveFocus()
 
@@ -67,7 +80,7 @@ FocusScope {
             x: root.pan.x; y: root.pan.y
             Image {
                 id: big
-                anchors.fill: parent; anchors.margins: 16
+                anchors.fill: parent; anchors.margins: 28
                 source: root.entry && !root.entry.isVideo ? "image://full/" + encodeURIComponent(root.entry.path) : ""
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
@@ -79,32 +92,52 @@ FocusScope {
         }
         Pulse { visible: root.entry && !root.entry.isVideo && big.status === Image.Loading; running: visible; anchors.centerIn: parent }
 
+        // Zoom / pan. Mouse wheel and Cmd+scroll zoom around the cursor; trackpad scroll (pixelDelta) pans;
+        // pinch zooms. macOS adds tiny magnify events to a two-finger scroll, so a pinch only counts once it
+        // clearly differs from 1 and is ignored while scrolling.
+        property real lastScrollMs: 0
         WheelHandler {
+            id: wheel
             enabled: root.entry && !root.entry.isVideo
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
             onWheel: event => {
-                const f = event.angleDelta.y > 0 ? 1.12 : 1 / 1.12
-                root.zoom = Math.min(8, Math.max(0.25, root.zoom * f))
-                if (root.zoom <= 1) root.pan = Qt.point(0, 0)
-                root.panStart = root.pan
+                stage.lastScrollMs = Date.now()
+                const trackpad = event.pixelDelta.x !== 0 || event.pixelDelta.y !== 0
+                const cmd = (event.modifiers & (Qt.ControlModifier | Qt.MetaModifier)) !== 0
+                if (trackpad && !cmd) {
+                    if (root.zoom > 1) root.panBy(event.pixelDelta.x, event.pixelDelta.y)
+                } else {
+                    const d = trackpad ? event.pixelDelta.y * 0.01 : event.angleDelta.y * 0.0015
+                    root.zoomAt(point.position.x, point.position.y, Math.exp(d))
+                }
             }
         }
         PinchHandler {
             id: pinch
             target: null
             enabled: root.entry && !root.entry.isVideo
-            property real startZoom: 1
-            onActiveChanged: if (active) startZoom = root.zoom
-            onActiveScaleChanged: if (active) root.zoom = Math.min(8, Math.max(0.25, startZoom * activeScale))
+            property real last: 1
+            property bool engaged: false
+            onActiveChanged: { last = 1; engaged = false }
+            onActiveScaleChanged: {
+                if (!active) return
+                if (Date.now() - stage.lastScrollMs < 220) { last = activeScale; return }
+                if (!engaged) { if (Math.abs(activeScale - 1) < 0.04) return; engaged = true; last = activeScale }
+                root.zoomAt(centroid.position.x, centroid.position.y, activeScale / last)
+                last = activeScale
+            }
         }
         DragHandler {
             target: null
-            enabled: root.zoom > 1
-            onTranslationChanged: root.pan = Qt.point(root.panStart.x + translation.x, root.panStart.y + translation.y)
-            onActiveChanged: if (!active) root.panStart = root.pan
+            enabled: root.zoom > 1 && !pinch.active
+            acceptedDevices: PointerDevice.Mouse
+            property point origin
+            onActiveChanged: if (active) origin = root.pan
+            onTranslationChanged: if (active) root.setPan(origin.x + translation.x, origin.y + translation.y)
         }
         TapHandler {
             enabled: root.entry && !root.entry.isVideo
-            onDoubleTapped: { root.zoom = root.zoom > 1 ? 1 : 2; root.pan = Qt.point(0, 0); root.panStart = root.pan }
+            onDoubleTapped: root.zoomTo(root.zoom > 1.01 ? 1 : 2.5, point.position.x, point.position.y)
         }
 
         // Video

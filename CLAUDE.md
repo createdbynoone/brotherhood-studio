@@ -57,3 +57,9 @@ Cada release está firmado ad-hoc: macOS puede volver a pedir el permiso de Docu
 
 ## Publicar una versión
 1. Subir `VERSION` en `CMakeLists.txt`. 2. `tools/release.sh` (≈6 a 9 min). 3. `git commit` + `git tag -a vX.Y.Z` + push. 4. `gh release create vX.Y.Z dist/Brotherhood-Studio-X.Y.Z-arm64-mac.zip -R createdbynoone/brotherhood-studio`. La app instalada la ofrece al abrir.
+
+## Focus: zoom y pan (v1.0.8)
+- Rueda de ratón y ⌘/Ctrl+scroll hacen zoom anclado al cursor (`zoomTo` en `FocusView.qml`, la capa escala desde el centro del stage); el scroll del trackpad (`pixelDelta`) solo hace pan; pellizco = zoom; doble click alterna 1× / 2.5×. El pan se limita (`setPan`) y el arrastre solo lo hace el ratón.
+- macOS mezcla eventos de magnificación diminutos en un scroll de dos dedos: antes eso cambiaba el zoom al mover. El pellizco se ignora 220 ms tras cualquier rueda y exige |escala−1| ≥ 0.04 para activarse.
+- Arrastrar una card muestra su miniatura (`Drag.imageSource`) en lugar del URL como texto. `--open focus` abre el primer item en Focus (para capturas con `--grab`).
+- Márgenes: grid con `kPad = 20`, botón del inspector a 16 pt del borde.

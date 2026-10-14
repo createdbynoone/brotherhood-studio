@@ -76,7 +76,7 @@ Item {
         id: toggle
         width: 40; height: 40; radius: 20
         y: root.topInset + (root.height - root.topInset - root.bottomInset - height) / 2
-        x: Math.min(panel.x - width - 8, root.width - width - 8)     // follows the (animated) panel edge
+        x: Math.min(panel.x - width - 12, root.width - width - 16)     // follows the (animated) panel edge
         color: toggleHover.hovered ? Theme.elevated : Theme.alpha(Theme.surface, 0.9)
         border.color: Theme.hairlineStrong
         Icon {

@@ -141,6 +141,9 @@ Item {
         Drag.supportedActions: Qt.CopyAction
         Drag.mimeData: root.entry ? ({ "text/uri-list": "file://" + encodeURI(root.entry.path) }) : ({})
         Drag.active: dragHandler.active
+        // the drag shows the thumbnail itself instead of the file URL as text
+        Drag.imageSource: root.entry ? root.entry.thumbSource : ""
+        Drag.hotSpot: Qt.point(Math.min(root.width, 200) / 2, Math.min(root.height, 200) / 2)
     }
     DragHandler { id: dragHandler; target: null; acceptedButtons: Qt.LeftButton; dragThreshold: 8 }
 }

@@ -141,7 +141,7 @@ FocusScope {
                     visible: node.kind === 1
                     anchors.fill: parent
                     Row {
-                        anchors.left: parent.left; anchors.leftMargin: 14
+                        anchors.left: parent.left; anchors.leftMargin: 20
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.verticalCenterOffset: 6
                         spacing: 10
@@ -150,7 +150,7 @@ FocusScope {
                         Txt { visible: node.subCount > 0; text: node.subCount + (node.subCount === 1 ? " product" : " products"); variant: "caption"; muted: true; anchors.verticalCenter: parent.verticalCenter }
                     }
                     Icon {
-                        anchors.right: parent.right; anchors.rightMargin: 14
+                        anchors.right: parent.right; anchors.rightMargin: 20
                         anchors.verticalCenter: parent.verticalCenter; anchors.verticalCenterOffset: 6
                         name: node.collapsed ? "caret-right" : "caret-down"; weight: "bold"; size: 12; color: Theme.textMuted
                     }
@@ -163,7 +163,7 @@ FocusScope {
                     visible: node.kind === 2
                     anchors.fill: parent
                     Row {
-                        anchors.left: parent.left; anchors.leftMargin: 14
+                        anchors.left: parent.left; anchors.leftMargin: 20
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 8
                         Txt { text: node.title; variant: "strong"; font.pixelSize: 13; dim: true; anchors.verticalCenter: parent.verticalCenter }
@@ -298,7 +298,7 @@ FocusScope {
     }
     Rectangle {
         visible: drop.containsDrag
-        anchors.fill: parent; anchors.margins: 8
+        anchors.fill: parent; anchors.margins: 16
         radius: Theme.rPanel
         color: Theme.alpha(Theme.accent, 0.06)
         border.color: Theme.alpha(Theme.accent, 0.7)

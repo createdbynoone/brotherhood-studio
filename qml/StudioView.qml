@@ -10,7 +10,9 @@ Item {
         prompt.boot(); triage.boot(); studio.checkForUpdate()
         if (startOpen === "settings") settings.open()
         else if (startOpen === "palette") palette.show()
+        else if (startOpen === "focus") Qt.callLater(() => focusTimer.start())
     }
+    Timer { id: focusTimer; interval: 1800; onTriggered: { triage.moveAnchor(1, 0); triage.openFocus() } }
 
     // New versions are picked up while the app stays open (it used to check only at launch)
     Timer {

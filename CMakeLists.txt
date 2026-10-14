@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(BrotherhoodStudio VERSION 1.0.7 LANGUAGES CXX OBJCXX)
+project(BrotherhoodStudio VERSION 1.0.8 LANGUAGES CXX OBJCXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

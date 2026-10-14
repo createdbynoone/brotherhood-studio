@@ -75,6 +75,6 @@ private:
     qreal m_anchorOffset = 0;
     bool m_reflowing = false;
     QTimer m_reflowTimer;
-    static constexpr qreal kPad = 12, kGap = 8, kTop = 4, kBottom = 28, kBuffer = 700;
+    static constexpr qreal kPad = 20, kGap = 8, kTop = 4, kBottom = 28, kBuffer = 700;
     static constexpr qreal kGroupH = 54, kSubH = 34;
 };
