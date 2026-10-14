@@ -21,4 +21,8 @@ rm -f  "$P/imageformats/libqpdf.dylib" \
 # Controls styles other than Basic (and the native style plugins that pull in the macOS style)
 rm -f "$P"/quick/libqtquickcontrols2{fluentwinui3,fusion,imagine,ios,macos,material,universal}style*plugin.dylib \
       "$P"/quick/libqtquickcontrols2nativestyleplugin.dylib "$P"/quick/libqtquicknativestyleplugin.dylib
+# macdeployqt links each QML plugin from Resources/qml/... into PlugIns/: drop the links (and their now-empty
+# module folders) whose target was just removed, or `codesign --strict` fails on dangling symlinks.
+find "$APP/Contents" -type l ! -exec test -e {} \; -delete
+find "$APP/Contents/Resources/qml" -type d -empty -delete 2>/dev/null || true
 echo "pruned: $(find "$P" -name '*.dylib' | wc -l | tr -d ' ') plugins left"
