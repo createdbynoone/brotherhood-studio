@@ -58,9 +58,10 @@ Cada release está firmado ad-hoc: macOS puede volver a pedir el permiso de Docu
 ## Publicar una versión
 1. Subir `VERSION` en `CMakeLists.txt`. 2. `tools/release.sh` (≈6 a 9 min). 3. `git commit` + `git tag -a vX.Y.Z` + push. 4. `gh release create vX.Y.Z dist/Brotherhood-Studio-X.Y.Z-arm64-mac.zip -R createdbynoone/brotherhood-studio`. La app instalada la ofrece al abrir.
 
-## Focus: zoom y pan (v1.0.8)
-- Rueda de ratón y ⌘/Ctrl+scroll hacen zoom anclado al cursor (`zoomTo` en `FocusView.qml`, la capa escala desde el centro del stage); el scroll del trackpad (`pixelDelta`) solo hace pan; pellizco = zoom; doble click alterna 1× / 2.5×. El pan se limita (`setPan`) y el arrastre solo lo hace el ratón.
-- macOS mezcla eventos de magnificación diminutos en un scroll de dos dedos: antes eso cambiaba el zoom al mover. El pellizco se ignora 220 ms tras cualquier rueda y exige |escala−1| ≥ 0.04 para activarse.
-- Arrastrar una card muestra su miniatura (`Drag.imageSource`) en lugar del URL como texto. `--open focus` abre el primer item en Focus (para capturas con `--grab`).
-- Márgenes: grid con `kPad = 20`, botón del inspector a 16 pt del borde.
-- (post 1.0.8, sin publicar) El pellizco ya no usa `PinchHandler`: `Mac::installMagnify` (NSEvent local monitor) emite `studio.magnified(x, y, mag, phase)` y se traga el evento; `FocusView` solo lo acepta como gesto deliberado (zona muerta 0.04, no durante scroll, no 250 ms tras un click). El zoom solo se resetea al cambiar de imagen (por `path`) o con doble click; un click simple nunca lo toca.
+## Focus: zoom, pan y pellizco (v1.0.9)
+- Rueda de ratón y ⌘/Ctrl+scroll hacen zoom anclado al cursor (`zoomTo` en `FocusView.qml`; la capa escala desde el centro del stage); el scroll del trackpad (`pixelDelta`) solo hace pan; arrastre con ratón = pan (`DragHandler` con `acceptedDevices: Mouse`, solo con zoom > 1; NO referenciar ids borrados en `enabled`: un ReferenceError lo desactiva en silencio). Pan acotado (`setPan`). Zoom 1× a 10×.
+- **Pellizco**: sin `PinchHandler`; `Mac::installMagnify` emite `studio.magnified(...)` (ver Canvas CLAUDE.md para el porqué). Zona muerta 0.04, ignorado 200 ms tras una rueda y 250 ms tras un press/release (`clickGuard`).
+- **El zoom solo se resetea** al cambiar de imagen (compara `path`, no el objeto: `focusEntry` se re-anuncia al cambiar estado/nota) o con doble click (zoom>1 → 1×; desde 1× → 2.5×). Un click simple nunca lo toca.
+- **Semáforo**: `installTitleBarDrag` deja pasar los clics sobre los botones estándar de la ventana.
+- Arrastrar una card muestra su miniatura (`Drag.imageSource`) en vez del URL como texto. Márgenes: grid `kPad = 20`, botón del inspector a 16 pt del borde.
+- `--open focus` abre el primer item en Focus (capturas con `--grab --delay 9000`: las imágenes grandes tardan en decodificar).
