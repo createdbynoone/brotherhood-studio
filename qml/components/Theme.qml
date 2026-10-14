@@ -50,6 +50,9 @@ QtObject {
     readonly property string sans: "Geist"
     readonly property string mono: "Geist Mono"
     property string brand: ""             // Sequel 100 Black 75, set from Main.qml when the font is bundled
+    // Titles (pane, card, section, mode switch, primary buttons): brand face, uppercase, no tracking
+    readonly property string headingFamily: brand.length > 0 ? brand : sans
+    readonly property int headingWeight: brand.length > 0 ? Font.Normal : Font.Bold
 
     // Motion. One curve (fast out, soft landing); every duration collapses to 0 under Reduce Motion.
     property bool reduceMotion: false

@@ -6,7 +6,17 @@ import QtQuick.Effects
 Item {
     id: view
 
-    Component.onCompleted: { prompt.boot(); triage.boot(); studio.checkForUpdate() }
+    Component.onCompleted: {
+        prompt.boot(); triage.boot(); studio.checkForUpdate()
+        if (startOpen === "settings") settings.open()
+        else if (startOpen === "palette") palette.show()
+    }
+
+    // New versions are picked up while the app stays open (it used to check only at launch)
+    Timer {
+        interval: 30 * 60 * 1000; repeat: true; running: true
+        onTriggered: if (!studio.updateAvailable && !studio.updating && !studio.checkingUpdate) studio.checkForUpdate()
+    }
 
     // ── Feedback from the three controllers ──────────────────────────────
     Connections { target: studio; function onToast(m, k) { toasts.show(m, k) } }
@@ -16,29 +26,29 @@ Item {
     // ── Commands (palette + shortcuts) ───────────────────────────────────
     function nameFilter(i) { return ["All", "Unsorted", "Keep", "Maybe", "Discard", "Archived"][i] }
     readonly property var commands: [
-        { title: "Show BMP only", group: "View", hint: "⌘1", icon: "square-half", run: () => studio.layout = "prompt" },
+        { title: "Show Marketing Prompts only", group: "View", hint: "⌘1", icon: "square-half", run: () => studio.layout = "prompt" },
         { title: "Show both panes", group: "View", hint: "⌘2", icon: "columns", run: () => studio.layout = "split" },
-        { title: "Show Sorter only", group: "View", hint: "⌘3", icon: "square-half", run: () => studio.layout = "triage" },
+        { title: "Show Generation Sorter only", group: "View", hint: "⌘3", icon: "square-half", run: () => studio.layout = "triage" },
         { title: "Switch pane", group: "View", hint: "⌃Tab", icon: "swap", run: () => studio.cyclePane() },
-        { title: "Generate prompt", group: "BMP", hint: "⌘↩", icon: "magic-wand", run: () => prompt.generate() },
-        { title: "Fire to Higgsfield", group: "BMP", hint: "⌘⇧↩", icon: "lightning", run: () => prompt.fire() },
-        { title: "Auto-write brief", group: "BMP", icon: "sparkle", run: () => prompt.autoWriteBrief() },
-        { title: "Prompt history", group: "BMP", hint: "⌘Y", icon: "clock-counter-clockwise", run: () => history.open() },
-        { title: "Reset inputs", group: "BMP", hint: "⌘⇧K", icon: "arrow-counter-clockwise", run: () => prompt.reset() },
-        { title: "Copy prompt", group: "BMP", hint: "⌘⇧C", icon: "copy", run: () => studio.copyText(prompt.prompt) },
-        { title: "Open output folder", group: "BMP", hint: "⌘⇧O", icon: "folder-open", run: () => studio.openFolder(prompt.outputPath) },
-        { title: "Rescan output folder", group: "Sorter", hint: "⌘⌥R", icon: "arrow-clockwise", run: () => triage.rescan() },
-        { title: "Import a folder", group: "Sorter", hint: "⌘I", icon: "folder-plus", run: () => triagePane.requestImport() },
-        { title: "Select all", group: "Sorter", hint: "⌘A", icon: "check", run: () => triage.selectAll() },
-        { title: "Deselect", group: "Sorter", hint: "⌘⇧D", icon: "x", run: () => triage.clearSelection() },
-        { title: "Toggle inspector", group: "Sorter", hint: "I", icon: "sidebar", run: () => triage.inspectorOpen = !triage.inspectorOpen },
-        { title: "Trash discarded", group: "Sorter", hint: "⌘⌫", icon: "trash", run: () => triagePane.requestTrash() },
-        { title: "Filter: All", group: "Sorter", icon: "funnel", run: () => triage.filter = 0 },
-        { title: "Filter: Unsorted", group: "Sorter", icon: "funnel", run: () => triage.filter = 1 },
-        { title: "Filter: Keep", group: "Sorter", icon: "arrow-up", run: () => triage.filter = 2 },
-        { title: "Filter: Maybe", group: "Sorter", icon: "approximate-equals", run: () => triage.filter = 3 },
-        { title: "Filter: Discard", group: "Sorter", icon: "x", run: () => triage.filter = 4 },
-        { title: "Filter: Archived", group: "Sorter", icon: "archive-box", run: () => triage.filter = 5 },
+        { title: "Generate prompt", group: "Marketing Prompts", hint: "⌘↩", icon: "magic-wand", run: () => prompt.generate() },
+        { title: "Fire to Higgsfield", group: "Marketing Prompts", hint: "⌘⇧↩", icon: "lightning", run: () => prompt.fire() },
+        { title: "Auto-write brief", group: "Marketing Prompts", icon: "sparkle", run: () => prompt.autoWriteBrief() },
+        { title: "Prompt history", group: "Marketing Prompts", hint: "⌘Y", icon: "clock-counter-clockwise", run: () => history.open() },
+        { title: "Reset inputs", group: "Marketing Prompts", hint: "⌘⇧K", icon: "arrow-counter-clockwise", run: () => prompt.reset() },
+        { title: "Copy prompt", group: "Marketing Prompts", hint: "⌘⇧C", icon: "copy", run: () => studio.copyText(prompt.prompt) },
+        { title: "Open output folder", group: "Marketing Prompts", hint: "⌘⇧O", icon: "folder-open", run: () => studio.openFolder(prompt.outputPath) },
+        { title: "Rescan output folder", group: "Generation Sorter", hint: "⌘⌥R", icon: "arrow-clockwise", run: () => triage.rescan() },
+        { title: "Import a folder", group: "Generation Sorter", hint: "⌘I", icon: "folder-plus", run: () => triagePane.requestImport() },
+        { title: "Select all", group: "Generation Sorter", hint: "⌘A", icon: "check", run: () => triage.selectAll() },
+        { title: "Deselect", group: "Generation Sorter", hint: "⌘⇧D", icon: "x", run: () => triage.clearSelection() },
+        { title: "Toggle inspector", group: "Generation Sorter", hint: "I", icon: "sidebar", run: () => triage.inspectorOpen = !triage.inspectorOpen },
+        { title: "Trash discarded", group: "Generation Sorter", hint: "⌘⌫", icon: "trash", run: () => triagePane.requestTrash() },
+        { title: "Filter: All", group: "Generation Sorter", icon: "funnel", run: () => triage.filter = 0 },
+        { title: "Filter: Unsorted", group: "Generation Sorter", icon: "funnel", run: () => triage.filter = 1 },
+        { title: "Filter: Keep", group: "Generation Sorter", icon: "arrow-up", run: () => triage.filter = 2 },
+        { title: "Filter: Maybe", group: "Generation Sorter", icon: "approximate-equals", run: () => triage.filter = 3 },
+        { title: "Filter: Discard", group: "Generation Sorter", icon: "x", run: () => triage.filter = 4 },
+        { title: "Filter: Archived", group: "Generation Sorter", icon: "archive-box", run: () => triage.filter = 5 },
         { title: "Settings", group: "App", hint: "⌘,", icon: "gear", run: () => settings.open() },
         { title: "Check for updates", group: "App", icon: "download-simple", run: () => studio.checkForUpdate() }
     ]
@@ -82,17 +92,17 @@ Item {
 
         Row {   // after the traffic lights
             property bool dragThrough: true
-            anchors.left: parent.left; anchors.leftMargin: 84
+            anchors.left: parent.left; anchors.leftMargin: 20
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 12
-            BrandMark { size: 24; anchors.verticalCenter: parent.verticalCenter }
-            Wordmark { size: 13; anchors.verticalCenter: parent.verticalCenter }
+            spacing: 14
+            BrandMark { size: 34; anchors.verticalCenter: parent.verticalCenter }
+            Wordmark { size: 19; anchors.verticalCenter: parent.verticalCenter }
         }
 
         Segment {
             anchors.centerIn: parent
-            height_: 40; fontSize: 13; hPad: 24; gap: 6; inset: 4
-            options: [{ key: "prompt", label: "BMP" }, { key: "split", label: "Split" }, { key: "triage", label: "Sorter" }]
+            height_: 40; fontSize: 12; hPad: 22; gap: 6; inset: 4; heading: true
+            options: [{ key: "prompt", label: "Marketing Prompts" }, { key: "split", label: "Split" }, { key: "triage", label: "Generation Sorter" }]
             current: studio.layout
             onPicked: key => studio.layout = key
         }

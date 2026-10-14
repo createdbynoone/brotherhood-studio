@@ -20,8 +20,7 @@ Rectangle {
 
         PaneHeader {
             width: parent.width
-            title: "Sorter"
-            subtitle: root.focusing ? "Focus" : "Generation triage"
+            title: "Generation Sorter"
             active: root.active
 
             Btn { kind: "ghost"; size: "s"; icon: "squares-four"; tip: "Sort and grid size"; hint: "[ ]"; onClicked: viewMenu.popup() }

@@ -4,7 +4,6 @@ import QtQuick
 Rectangle {
     id: root
     property string title: ""
-    property string subtitle: ""
     property bool active: false
     default property alias actions: actionRow.data
 
@@ -13,18 +12,14 @@ Rectangle {
 
     Hairline { anchors.bottom: parent.bottom }
 
-    Row {
+    Txt {
+        text: root.title
+        variant: "heading"
+        font.pixelSize: 13
+        color: root.active ? Theme.text : Theme.textDim
+        Behavior on color { ColorAnimation { duration: Theme.base } }
         anchors.left: parent.left; anchors.leftMargin: Theme.s16
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 10
-        Txt {
-            text: root.title
-            variant: "title"
-            color: root.active ? Theme.text : Theme.textDim
-            Behavior on color { ColorAnimation { duration: Theme.base } }
-            anchors.verticalCenter: parent.verticalCenter
-        }
-        Txt { visible: root.subtitle.length > 0; text: root.subtitle; variant: "small"; muted: true; anchors.verticalCenter: parent.verticalCenter }
     }
     Row {
         id: actionRow

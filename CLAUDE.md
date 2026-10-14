@@ -29,6 +29,7 @@ tools/         gen_prompts.py, gen_icons.py, uitest.swift, release.sh
 
 ## Diseño
 - Una paleta cálida-oscura, UN acento naranja `#F54F1B` (texto sobre él: `#0B0B0A`, AA). Radios: control 8, card 12, panel 16. Tres tonos de texto, todos AA.
+- Títulos (paneles, tarjetas, secciones, selector de modo, botones principales): `Txt` variante `heading`/`overline` = fuente de marca (Sequel), MAYÚSCULAS, sin tracking; fallback Geist Bold. Nombres visibles: "Marketing Prompts" y "Generation Sorter" (sin subtítulos). Ancho mínimo de ventana 1360 (selector de modo + logo + controles).
 - Tipografía Geist / Geist Mono; wordmark `BROTHERHOOD®` en Sequel 100 Black 75 (mayúsculas). Íconos Phosphor (fuente), nunca SVG a mano. Sin guiones largos en textos visibles.
 - `Theme.reduceMotion` sigue "Reducir movimiento" de macOS; toda duración pasa por `Theme.ms()`.
 

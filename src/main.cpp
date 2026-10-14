@@ -29,7 +29,8 @@ int main(int argc, char *argv[]) {
     QCommandLineOption layout("layout", "prompt | split | triage", "mode");
     QCommandLineOption size("size", "Window size WxH.", "WxH", "1560x940");
     QCommandLineOption transition("transition", "Capture frames of a layout change: from:to:prefix", "spec");
-    cli.addOptions({grab, delay, layout, size, transition});
+    QCommandLineOption openOpt("open", "Open a dialog at startup (settings | palette), for design review.", "what");
+    cli.addOptions({grab, delay, layout, size, transition, openOpt});
     cli.process(app);
 
     for (const char *f : {"Geist-Regular", "Geist-Medium", "Geist-SemiBold", "Geist-Bold", "GeistMono-Regular", "GeistMono-Medium",
@@ -58,6 +59,7 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("triage", &triage);
     engine.rootContext()->setContextProperty("grabSize", cli.value(size));
     engine.rootContext()->setContextProperty("brandFamily", brandFamily);
+    engine.rootContext()->setContextProperty("startOpen", cli.value(openOpt));
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
     engine.loadFromModule("Studio", "Main");

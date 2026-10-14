@@ -7,7 +7,7 @@ ApplicationWindow {
     visible: true
     readonly property var gs: (typeof grabSize === "string" && grabSize.indexOf("x") > 0) ? grabSize.split("x").map(Number) : [1560, 940]
     width: gs[0]; height: gs[1]
-    minimumWidth: studio.layout === "split" ? 1100 : 860
+    minimumWidth: 1360
     minimumHeight: 660
     color: Theme.bg
     title: "Brotherhood Studio"

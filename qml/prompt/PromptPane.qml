@@ -14,8 +14,7 @@ Rectangle {
 
         PaneHeader {
             width: parent.width
-            title: "BMP"
-            subtitle: "Marketing prompts"
+            title: "Marketing Prompts"
             active: root.active
             Btn { kind: "ghost"; size: "s"; icon: "clock-counter-clockwise"; tip: "Prompt history"; hint: "⌘Y"; onClicked: root.openHistory() }
             Btn { kind: "ghost"; size: "s"; icon: "arrow-counter-clockwise"; tip: "Reset inputs"; hint: "⌘⇧K"; onClicked: prompt.reset() }

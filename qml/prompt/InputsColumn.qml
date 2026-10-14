@@ -14,7 +14,7 @@ Column {
             spacing: 10
             Row {
                 spacing: 8
-                Txt { text: "Reference"; variant: "strong" }
+                Txt { text: "Reference"; variant: "heading" }
                 Txt { text: "one image · scene, light, mood"; variant: "caption"; muted: true; anchors.baseline: parent.children[0].baseline }
             }
             DropTile {
@@ -54,7 +54,7 @@ Column {
             spacing: 10
             Row {
                 spacing: 8
-                Txt { text: "Product"; variant: "strong" }
+                Txt { text: "Product"; variant: "heading" }
                 Txt { text: "Brotherhood garment"; variant: "caption"; muted: true; anchors.baseline: parent.children[0].baseline }
             }
             DropTile {
@@ -79,7 +79,7 @@ Column {
                 Row {
                     spacing: 8
                     anchors.verticalCenter: parent.verticalCenter
-                    Txt { text: "Brief"; variant: "strong" }
+                    Txt { text: "Brief"; variant: "heading" }
                     Txt { text: "optional · Sonnet writes it if empty"; variant: "caption"; muted: true; anchors.baseline: parent.children[0].baseline }
                 }
                 Btn {

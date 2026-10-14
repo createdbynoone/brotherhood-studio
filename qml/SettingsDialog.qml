@@ -93,10 +93,10 @@ Popup {
                         Btn { kind: "secondary"; size: "xs"; text: "Choose"; onClicked: outputPicker.open() }
                         Btn { kind: "ghost"; size: "xs"; text: "Open"; onClicked: studio.openFolder(prompt.outputPath) }
                     }
-                    Row_ { label: "Higgsfield images are saved here, and the Sorter pane watches the same folder"; height: 38 }
+                    Row_ { label: "Higgsfield images are saved here, and Generation Sorter watches the same folder"; height: 38 }
                 }
                 Section {
-                    heading: "BMP"
+                    heading: "Marketing Prompts"
                     Row_ { label: "claude"; value: studio.toolPath("claude") || "not found"; mono: true }
                     Row_ { label: "higgsfield"; value: studio.toolPath("higgsfield") || "not found"; mono: true }
                     Row_ {
@@ -112,7 +112,7 @@ Popup {
                     }
                 }
                 Section {
-                    heading: "Sorter"
+                    heading: "Generation Sorter"
                     Row_ {
                         label: "Watched folder"
                         value: studio.abbreviate(triage.watchPath); mono: true

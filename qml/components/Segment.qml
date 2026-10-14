@@ -10,6 +10,7 @@ Item {
     property int hPad: 11
     property int gap: 0
     property int inset: 2
+    property bool heading: false          // brand face, uppercase, no tracking (the mode switch)
     signal picked(var key)
 
     readonly property int currentIndex: {
@@ -60,7 +61,10 @@ Item {
                     anchors.centerIn: parent
                     text: modelData.label
                     font.pixelSize: root.fontSize
-                    font.weight: Font.Medium
+                    font.family: root.heading ? Theme.headingFamily : Theme.sans
+                    font.weight: root.heading ? Theme.headingWeight : Font.Medium
+                    font.capitalization: root.heading ? Font.AllUppercase : Font.MixedCase
+                    font.letterSpacing: 0
                     color: parent.on ? Theme.text : (hover.hovered ? Theme.text : Theme.textDim)
                     Behavior on color { ColorAnimation { duration: Theme.fast } }
                 }

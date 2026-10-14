@@ -22,6 +22,7 @@ Item {
     readonly property int h: size === "xs" ? 24 : size === "s" ? 28 : size === "m" ? 32 : 40
     readonly property int fontSize: size === "xs" ? 11 : size === "s" ? 12 : 13
     readonly property int pad: size === "xs" ? 8 : size === "s" ? 10 : size === "m" ? 12 : 16
+    readonly property bool headingText: kind === "primary" && size === "l"
     readonly property int iconSize: size === "l" ? 16 : size === "xs" ? 13 : 14
 
     implicitHeight: h
@@ -86,8 +87,11 @@ Item {
         Txt {
             visible: root.text.length > 0
             text: root.text
-            font.pixelSize: root.fontSize
-            font.weight: root.kind === "primary" ? Font.DemiBold : Font.Medium
+            font.pixelSize: root.headingText ? 12 : root.fontSize
+            font.family: root.headingText ? Theme.headingFamily : Theme.sans
+            font.weight: root.headingText ? Theme.headingWeight : root.kind === "primary" ? Font.DemiBold : Font.Medium
+            font.capitalization: root.headingText ? Font.AllUppercase : Font.MixedCase
+            font.letterSpacing: 0
             color: root.inkColor
             anchors.verticalCenter: parent.verticalCenter
         }

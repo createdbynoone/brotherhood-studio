@@ -145,7 +145,7 @@ FocusScope {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.verticalCenterOffset: 6
                         spacing: 10
-                        Txt { text: node.title; variant: "overline"; font.pixelSize: 12; font.weight: Font.Bold; font.letterSpacing: 2; anchors.verticalCenter: parent.verticalCenter }
+                        Txt { text: node.title; variant: "heading"; anchors.verticalCenter: parent.verticalCenter }
                         Txt { text: node.count; variant: "caption"; muted: true; anchors.verticalCenter: parent.verticalCenter }
                         Txt { visible: node.subCount > 0; text: node.subCount + (node.subCount === 1 ? " product" : " products"); variant: "caption"; muted: true; anchors.verticalCenter: parent.verticalCenter }
                     }
@@ -186,7 +186,7 @@ FocusScope {
             }
             Txt {
                 visible: triage.totalCount === 0
-                text: "BMP's output folder is scanned automatically"
+                text: "The Marketing Prompts output folder is scanned automatically"
                 variant: "caption"; muted: true; anchors.horizontalCenter: parent.horizontalCenter
             }
             Btn {
