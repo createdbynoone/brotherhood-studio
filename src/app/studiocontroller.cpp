@@ -100,7 +100,9 @@ static bool isNewer(const QString &remote, const QString &local) {
 
 void StudioController::checkForUpdate() {
     m_checking = true; emit updateChanged();
-    QNetworkRequest req{QUrl(QStringLiteral("https://api.github.com/repos/%1/releases/latest").arg(kRepo))};
+    // BS_UPDATE_API lets a test point the check at a local server (see CLAUDE.md); production uses GitHub.
+    const QString api = qEnvironmentVariable("BS_UPDATE_API", QStringLiteral("https://api.github.com/repos/%1/releases/latest").arg(kRepo));
+    QNetworkRequest req{QUrl(api)};
     req.setRawHeader("Accept", "application/vnd.github+json");
     req.setTransferTimeout(8000);
     QNetworkReply *reply = m_nam->get(req);

@@ -16,7 +16,7 @@ ApplicationWindow {
 
     // Native title-bar drag (Mac.installTitleBarDrag): which points are empty space?
     function titleBarHit(x, y) {
-        if (!splashDone || !studio.unlocked) return y < 60
+        if (!splashDone || !studio.unlocked) return y < 92
         return studioLoader.item ? studioLoader.item.dragAt(x, y) : false
     }
     Component.onCompleted: { Theme.reduceMotion = studio.reduceMotion; Theme.brand = brandFamily }

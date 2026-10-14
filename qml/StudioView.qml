@@ -63,10 +63,13 @@ Item {
     Shortcut { sequences: ["Ctrl+Backspace"]; enabled: studio.layout !== "prompt" && (triage.statusCounts[3] || 0) > 0; onActivated: triagePane.requestTrash() }
     Shortcut { sequences: ["Ctrl+Esc"]; enabled: triage.focusIndex >= 0; onActivated: triage.closeFocus() }
 
-    // True when (x, y) in window coordinates is empty title-bar space (the native drag starts there).
-    function dragAt(x, y) {
-        if (y > topBar.height) return false
-        const c = topBar.childAt(x, y)
+    // True when (sx, sy), in window (scene) coordinates, is title-bar space where a native drag may start. Qt leaves a
+    // safe-area strip above the content for the traffic lights, so the point is mapped into this item first.
+    function dragAt(sx, sy) {
+        const p = view.mapFromItem(null, sx, sy)
+        if (p.y > topBar.height) return false
+        if (p.y < 0) return true                      // the strip with the traffic lights
+        const c = topBar.childAt(p.x, p.y)
         return !c || c.dragThrough === true
     }
 
