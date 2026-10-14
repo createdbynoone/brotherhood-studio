@@ -9,8 +9,8 @@ BMP (Brotherhood Marketing Prompts) y Sorter (triage de generaciones) en una sol
 
 ## Estructura
 ```
-src/core/      JsonFile (escritura atómica), Paths, Prefs (solo toca sus claves), Lock (PBKDF2 + Keychain)
-src/platform/  mac.mm: Keychain, CommonCrypto, ImageIO, AVFoundation, Papelera, ventana, arrastre de la barra
+src/core/      JsonFile (escritura atómica), Paths, Prefs (solo toca sus claves), Lock (PBKDF2 + token en archivo)
+src/platform/  mac.mm: CommonCrypto, ImageIO, AVFoundation, Papelera, ventana, arrastre de la barra
 src/prompt/    BMP: Shell, Higgsfield, ClaudeCli, MemoryStore, Staging, Downloader, PromptController, LogModel
 src/triage/    Sorter: Store, EntryItem, GalleryModel, FolderWatcher, ThumbProvider, TriageController
 src/app/       StudioController (layout, clave, updates, helpers de SO)
@@ -23,7 +23,7 @@ tools/         gen_prompts.py, gen_icons.py, uitest.swift, release.sh
 ## Compatibilidad (no romper)
 - Mismos archivos que las apps anteriores: `~/Library/Application Support/BMP/{bmp-prefs,bmp-memory}.json`, `.../Sorter/{sorter-db,sorter-prefs}.json` + `library/`. `Prefs` y `Store` conservan las claves que no conocen. Layout propio en `BrotherhoodStudioQt/studio-prefs.json`.
 - `src/prompt/prompts.cpp` se GENERA con `tools/gen_prompts.py` desde `Prompts.swift`; `system` debe ser byte-idéntico al SYSTEM_PROMPT de Electron.
-- Lock: misma passphrase (PBKDF2-SHA512 200k). Keychain service `com.brotherhood.studio.qt`: la clave se pide una vez por Mac.
+- Lock: misma passphrase (PBKDF2-SHA512 200k). El token de desbloqueo es un archivo 0600 (`BrotherhoodStudioQt/unlock.token`, HMAC atado a la Mac y al hash de la clave): la clave se pide una vez por Mac. NO usar Keychain: su ACL queda atada a la firma de cada release (ad-hoc) y macOS pide la contraseña tras cada actualización.
 - Resultados de BMP: `bmp_<ms>.<ext>` en `outputPath`; el Sorter vigila ese patrón. `PromptController::saved` → `TriageController::ingest` los muestra al instante.
 - NB 2.1 siempre lleva `thinking_level=high` (fijo en `Provider`).
 
@@ -52,7 +52,7 @@ Al abrir, `StudioController::checkForUpdate` consulta `releases/latest` de `crea
 
 GitHub responde 403 a peticiones sin `User-Agent` (Qt no lo envía solo): `StudioController` lo pone en el chequeo y en la descarga. `BS_VERSION_OVERRIDE=1.0.0` hace que la app se crea una versión anterior para probar el flujo contra releases reales.
 Prueba local del actualizador sin publicar nada: servir un `latest.json` (formato de la API de releases: `tag_name`, `html_url`, `assets[].name/browser_download_url`) con `python3 -m http.server` y arrancar con `BS_UPDATE_API=http://localhost:8765/latest.json`. La app reemplaza su propio .app por el zip, quita cuarentena y se reabre.
-Cada release está firmado ad-hoc: macOS puede volver a pedir el permiso de Documentos tras actualizar. El token de desbloqueo del Keychain usa ACL abierta justamente para no pedir permiso en cada versión.
+Cada release está firmado ad-hoc: macOS puede volver a pedir el permiso de Documentos tras actualizar. 
 
 ## Publicar una versión
 1. Subir `VERSION` en `CMakeLists.txt`. 2. `tools/release.sh` (≈6 a 9 min). 3. `git commit` + `git tag -a vX.Y.Z` + push. 4. `gh release create vX.Y.Z dist/Brotherhood-Studio-X.Y.Z-arm64-mac.zip -R createdbynoone/brotherhood-studio`. La app instalada la ofrece al abrir.

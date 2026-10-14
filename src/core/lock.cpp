@@ -1,9 +1,12 @@
 #include "lock.h"
 
 #include "../platform/mac.h"
+#include "paths.h"
 #include "prefs.h"
 
 #include <QDateTime>
+#include <QFile>
+#include <QSaveFile>
 #include <QtMath>
 
 // Same salt/hash as the SwiftUI BMP build, so the same passphrase opens this app.
@@ -15,7 +18,6 @@ static const char *kSaltHex = "1b2b0cb131d133d28ff17a07cf8fc82a";
 static const char *kHashHex = "4ccbf4703f3ede32ebd7f31a914ad62a156a6ae1d8bbfcfb4b14ec254ff2d48225ffbcdfefc0016f794e8ac4f5c4bb51d03cafa4c2442fb276f3f2ad6aabc3e0";
 static const quint32 kIterations = 200000;
 static const QString kService = QStringLiteral("com.brotherhood.studio.qt");
-static const QString kAccount = QStringLiteral("unlock-token");
 
 static bool constantTimeEqual(const QByteArray &a, const QByteArray &b) {
     if (a.size() != b.size()) return false;
@@ -45,19 +47,32 @@ void clearFailures() {
     remember();
 }
 
-// HMAC-SHA256(machine UUID, key hash + service): bound to this Mac (copying the item elsewhere
-// fails), bound to the key hash (changing the passphrase re-locks every Mac) and ThisDeviceOnly
-// (never syncs). Any Keychain failure falls back to asking for the key, never to opening.
+// "Unlocked once per Mac": a small token file in the app's support folder, HMAC-SHA256(machine UUID, key hash +
+// service). Bound to this Mac (a copy elsewhere fails) and to the key hash (changing the passphrase re-locks every
+// Mac). It deliberately does NOT use the Keychain: an item there is tied to the signing identity of the app that
+// created it, and every ad-hoc signed release has a new one, so macOS asked for the login password again after each
+// update. A 0600 file survives updates and never prompts. Any read problem falls back to asking for the key.
 static QByteArray expectedToken() {
     return Mac::hmacSha256(Mac::machineId().toUtf8(), (QString(kHashHex) + kService).toUtf8());
 }
 
+static QString tokenPath() { return Paths::studioDir() + "/unlock.token"; }
+
 bool isRemembered() {
-    const QByteArray stored = Mac::keychainGet(kService, kAccount);
+    QFile f(tokenPath());
+    if (!f.open(QIODevice::ReadOnly)) return false;
+    const QByteArray stored = QByteArray::fromHex(f.readAll().trimmed());
     return !stored.isEmpty() && constantTimeEqual(stored, expectedToken());
 }
 
-void remember() { Mac::keychainSet(kService, kAccount, expectedToken()); }
-void forget() { Mac::keychainDelete(kService, kAccount); }
+void remember() {
+    QSaveFile f(tokenPath());
+    f.setDirectWriteFallback(false);
+    if (!f.open(QIODevice::WriteOnly)) return;
+    f.write(expectedToken().toHex());
+    if (f.commit()) QFile::setPermissions(tokenPath(), QFileDevice::ReadOwner | QFileDevice::WriteOwner);
+}
+
+void forget() { QFile::remove(tokenPath()); }
 
 }  // namespace AppLock

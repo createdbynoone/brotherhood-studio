@@ -6,18 +6,15 @@
 
 class QWindow;
 
-// Thin wrappers over Apple frameworks (Keychain, CommonCrypto, ImageIO, AVFoundation,
+// Thin wrappers over Apple frameworks (CommonCrypto, ImageIO, AVFoundation,
 // AppKit). Everything above this layer stays portable C++/Qt.
 namespace Mac {
 
-// ── Crypto / Keychain ────────────────────────────────────────────────────
+// ── Crypto ────────────────────────────────────────────────────
 QString machineId();
 bool pbkdf2Sha512(const QByteArray &pass, const QByteArray &salt, quint32 iterations, int keyLen, QByteArray *out);
 QByteArray hmacSha256(const QByteArray &key, const QByteArray &data);
 QByteArray sha256(const QByteArray &data);
-QByteArray keychainGet(const QString &service, const QString &account);
-bool keychainSet(const QString &service, const QString &account, const QByteArray &data);
-void keychainDelete(const QString &service, const QString &account);
 
 // ── Images / video ───────────────────────────────────────────────────────
 struct ImageProps { bool ok = false; int w = 0; int h = 0; int orientation = 1; };

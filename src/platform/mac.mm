@@ -21,7 +21,7 @@ namespace Mac {
 static NSString *ns(const QString &s) { return s.toNSString(); }
 static NSURL *fileUrl(const QString &p) { return [NSURL fileURLWithPath:ns(p)]; }
 
-// ── Crypto / Keychain ────────────────────────────────────────────────────
+// ── Crypto ───────────────────────────────────────────────────────────
 
 QString Mac::machineId() {
     io_service_t svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
@@ -53,51 +53,6 @@ QByteArray sha256(const QByteArray &data) {
     QByteArray d(CC_SHA256_DIGEST_LENGTH, 0);
     CC_SHA256(data.constData(), (CC_LONG)data.size(), reinterpret_cast<unsigned char *>(d.data()));
     return d;
-}
-
-static NSMutableDictionary *keychainQuery(const QString &service, const QString &account) {
-    return [@{(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
-              (__bridge id)kSecAttrService: ns(service),
-              (__bridge id)kSecAttrAccount: ns(account)} mutableCopy];
-}
-
-QByteArray keychainGet(const QString &service, const QString &account) {
-    NSMutableDictionary *q = keychainQuery(service, account);
-    q[(__bridge id)kSecReturnData] = @YES;
-    q[(__bridge id)kSecMatchLimit] = (__bridge id)kSecMatchLimitOne;
-    CFTypeRef out = nullptr;
-    if (SecItemCopyMatching((__bridge CFDictionaryRef)q, &out) != errSecSuccess || !out) return {};
-    NSData *d = (__bridge_transfer NSData *)out;
-    return QByteArray(reinterpret_cast<const char *>(d.bytes), (qsizetype)d.length);
-}
-
-bool keychainSet(const QString &service, const QString &account, const QByteArray &data) {
-    keychainDelete(service, account);
-    // The item is an HMAC bound to this Mac's hardware UUID, not a secret. It is stored with an open ACL
-    // (any application may read it): every release is ad-hoc signed with a new code hash, and an ACL tied to the
-    // creating binary would make macOS ask for permission again after each update.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    SecAccessRef access = nullptr;
-    if (SecAccessCreate((__bridge CFStringRef)ns(service), nullptr, &access) != errSecSuccess) access = nullptr;
-    const QByteArray svc = service.toUtf8(), acc = account.toUtf8();
-    OSStatus st = SecKeychainAddGenericPassword(nullptr, (UInt32)svc.size(), svc.constData(), (UInt32)acc.size(), acc.constData(),
-                                                (UInt32)data.size(), data.constData(), nullptr);
-    if (st == errSecSuccess && access) {
-        // attach the open access object to the item we just created
-        SecKeychainItemRef item = nullptr;
-        if (SecKeychainFindGenericPassword(nullptr, (UInt32)svc.size(), svc.constData(), (UInt32)acc.size(), acc.constData(), nullptr, nullptr, &item) == errSecSuccess && item) {
-            SecKeychainItemSetAccess(item, access);
-            CFRelease(item);
-        }
-    }
-    if (access) CFRelease(access);
-#pragma clang diagnostic pop
-    return st == errSecSuccess;
-}
-
-void keychainDelete(const QString &service, const QString &account) {
-    SecItemDelete((__bridge CFDictionaryRef)keychainQuery(service, account));
 }
 
 // ── Images ───────────────────────────────────────────────────────────────

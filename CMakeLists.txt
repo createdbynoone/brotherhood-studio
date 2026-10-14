@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(BrotherhoodStudio VERSION 1.0.4 LANGUAGES CXX OBJCXX)
+project(BrotherhoodStudio VERSION 1.0.5 LANGUAGES CXX OBJCXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -67,7 +67,7 @@ qt_add_resources(BrotherhoodStudio assets PREFIX "/assets" BASE ${CMAKE_SOURCE_D
 
 target_link_libraries(BrotherhoodStudio PRIVATE
     Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::Network Qt6::Concurrent Qt6::Multimedia Qt6::Svg
-    "-framework AppKit" "-framework Foundation" "-framework Security" "-framework CoreGraphics" "-framework ImageIO"
+    "-framework AppKit" "-framework Foundation" "-framework CoreGraphics" "-framework ImageIO"
     "-framework AVFoundation" "-framework CoreMedia" "-framework UniformTypeIdentifiers" "-framework IOKit")
 
 # App icon: resources/AppIcon.icon is an Icon Composer document (Liquid Glass icon). actool turns it into
