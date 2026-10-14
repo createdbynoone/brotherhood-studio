@@ -25,4 +25,13 @@ rm -f "$P"/quick/libqtquickcontrols2{fluentwinui3,fusion,imagine,ios,macos,mater
 # module folders) whose target was just removed, or `codesign --strict` fails on dangling symlinks.
 find "$APP/Contents" -type l ! -exec test -e {} \; -delete
 find "$APP/Contents/Resources/qml" -type d -empty -delete 2>/dev/null || true
+# CMake writes a qt.conf that points QmlImports at the BUILD directory (handy for development). Shipped as is,
+# the app would read that folder (here an external SSD) at every launch: slow, a macOS "removable volume"
+# permission prompt, and a dependency on the disk being plugged in. Point it inside the bundle instead.
+cat > "$APP/Contents/Resources/qt.conf" <<'CONF'
+[Paths]
+Plugins = PlugIns
+Imports = Resources/qml
+QmlImports = Resources/qml
+CONF
 echo "pruned: $(find "$P" -name '*.dylib' | wc -l | tr -d ' ') plugins left"
