@@ -63,3 +63,4 @@ Cada release está firmado ad-hoc: macOS puede volver a pedir el permiso de Docu
 - macOS mezcla eventos de magnificación diminutos en un scroll de dos dedos: antes eso cambiaba el zoom al mover. El pellizco se ignora 220 ms tras cualquier rueda y exige |escala−1| ≥ 0.04 para activarse.
 - Arrastrar una card muestra su miniatura (`Drag.imageSource`) en lugar del URL como texto. `--open focus` abre el primer item en Focus (para capturas con `--grab`).
 - Márgenes: grid con `kPad = 20`, botón del inspector a 16 pt del borde.
+- (post 1.0.8, sin publicar) El pellizco ya no usa `PinchHandler`: `Mac::installMagnify` (NSEvent local monitor) emite `studio.magnified(x, y, mag, phase)` y se traga el evento; `FocusView` solo lo acepta como gesto deliberado (zona muerta 0.04, no durante scroll, no 250 ms tras un click). El zoom solo se resetea al cambiar de imagen (por `path`) o con doble click; un click simple nunca lo toca.

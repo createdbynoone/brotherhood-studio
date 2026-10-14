@@ -26,7 +26,9 @@ FocusScope {
         setPan(px, py)
     }
     function zoomAt(sx, sy, f) { zoomTo(zoom * f, sx, sy) }
-    onEntryChanged: resetView()
+    // Reset only when the picture really changes, never when the same entry is merely re-announced (status, note)
+    property string shownPath: ""
+    onEntryChanged: { const p = entry ? entry.path : ""; if (p !== shownPath) { shownPath = p; resetView() } }
     Component.onCompleted: forceActiveFocus()
 
     Rectangle { anchors.fill: parent; color: Theme.bg }
@@ -108,28 +110,34 @@ FocusScope {
                     if (root.zoom > 1) root.panBy(event.pixelDelta.x, event.pixelDelta.y)
                 } else {
                     const d = trackpad ? event.pixelDelta.y * 0.01 : event.angleDelta.y * 0.0015
-                    root.zoomAt(point.position.x, point.position.y, Math.exp(d))
+                    root.zoomAt(point.position.x, point.position.y, Math.exp(Math.max(-0.25, Math.min(0.25, d))))
                 }
             }
         }
-        PinchHandler {
-            id: pinch
-            target: null
-            enabled: root.entry && !root.entry.isVideo
-            property real last: 1
-            property bool engaged: false
-            onActiveChanged: { last = 1; engaged = false }
-            onActiveScaleChanged: {
-                if (!active) return
-                if (Date.now() - stage.lastScrollMs < 220) { last = activeScale; return }
-                if (!engaged) { if (Math.abs(activeScale - 1) < 0.04) return; engaged = true; last = activeScale }
-                root.zoomAt(centroid.position.x, centroid.position.y, activeScale / last)
-                last = activeScale
+        // Pinch comes from AppKit as magnification deltas (Mac::installMagnify): only a deliberate gesture counts,
+        // never scroll noise, a click, or resting fingers.
+        property real pinchSum: 0
+        property bool pinchOn: false
+        Connections {
+            target: studio
+            enabled: root.visible && root.entry && !root.entry.isVideo
+            function onMagnified(x, y, mag, phase) {
+                if (phase & 1) { stage.pinchSum = 0; stage.pinchOn = false }
+                if ((phase & 24) && !(phase & 6)) { stage.pinchOn = false; stage.pinchSum = 0; return }
+                if (clickGuard.running || (!stage.pinchOn && Date.now() - stage.lastScrollMs < 200)) return
+                if (!stage.pinchOn) {
+                    stage.pinchSum += mag
+                    if (Math.abs(stage.pinchSum) < 0.04) return
+                    stage.pinchOn = true; mag = stage.pinchSum
+                }
+                const p = stage.mapFromItem(null, x, y)
+                root.zoomAt(p.x, p.y, Math.max(0.8, Math.min(1.25, 1 + mag)))
             }
         }
+        Timer { id: clickGuard; interval: 250 }   // a press or release just happened: not a pinch
         DragHandler {
             target: null
-            enabled: root.zoom > 1 && !pinch.active
+            enabled: root.zoom > 1 && root.entry && !root.entry.isVideo
             acceptedDevices: PointerDevice.Mouse
             property point origin
             onActiveChanged: if (active) origin = root.pan
@@ -137,6 +145,9 @@ FocusScope {
         }
         TapHandler {
             enabled: root.entry && !root.entry.isVideo
+            gesturePolicy: TapHandler.ReleaseWithinBounds
+            onPressedChanged: clickGuard.restart()
+            // a single click never touches the zoom: only a double click resets it (or zooms in from 1x)
             onDoubleTapped: root.zoomTo(root.zoom > 1.01 ? 1 : 2.5, point.position.x, point.position.y)
         }
 

@@ -65,6 +65,7 @@ public:
 
 signals:
     void layoutChanged();
+    void magnified(double x, double y, double magnification, int phase);   // trackpad pinch, window coordinates
     void splitFractionChanged();
     void activePaneChanged();
     void unlockedChanged();

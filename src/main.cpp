@@ -66,8 +66,9 @@ int main(int argc, char *argv[]) {
 
     auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
     if (!window) return 1;
-    QTimer::singleShot(0, [window] {
+    QTimer::singleShot(0, [window, &studio] {
         Mac::styleWindow(window);
+        Mac::installMagnify(window, [&studio](double x, double y, double m, int phase) { emit studio.magnified(x, y, m, phase); });
         // QML decides which points of the title bar are empty space (see Main.qml: titleBarHit)
         Mac::installTitleBarDrag(window, [window](double x, double y) {
             QVariant hit;
