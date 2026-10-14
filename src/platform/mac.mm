@@ -73,10 +73,27 @@ QByteArray keychainGet(const QString &service, const QString &account) {
 
 bool keychainSet(const QString &service, const QString &account, const QByteArray &data) {
     keychainDelete(service, account);
-    NSMutableDictionary *q = keychainQuery(service, account);
-    q[(__bridge id)kSecValueData] = [NSData dataWithBytes:data.constData() length:(NSUInteger)data.size()];
-    q[(__bridge id)kSecAttrAccessible] = (__bridge id)kSecAttrAccessibleWhenUnlockedThisDeviceOnly;
-    return SecItemAdd((__bridge CFDictionaryRef)q, nullptr) == errSecSuccess;
+    // The item is an HMAC bound to this Mac's hardware UUID, not a secret. It is stored with an open ACL
+    // (any application may read it): every release is ad-hoc signed with a new code hash, and an ACL tied to the
+    // creating binary would make macOS ask for permission again after each update.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    SecAccessRef access = nullptr;
+    if (SecAccessCreate((__bridge CFStringRef)ns(service), nullptr, &access) != errSecSuccess) access = nullptr;
+    const QByteArray svc = service.toUtf8(), acc = account.toUtf8();
+    OSStatus st = SecKeychainAddGenericPassword(nullptr, (UInt32)svc.size(), svc.constData(), (UInt32)acc.size(), acc.constData(),
+                                                (UInt32)data.size(), data.constData(), nullptr);
+    if (st == errSecSuccess && access) {
+        // attach the open access object to the item we just created
+        SecKeychainItemRef item = nullptr;
+        if (SecKeychainFindGenericPassword(nullptr, (UInt32)svc.size(), svc.constData(), (UInt32)acc.size(), acc.constData(), nullptr, nullptr, &item) == errSecSuccess && item) {
+            SecKeychainItemSetAccess(item, access);
+            CFRelease(item);
+        }
+    }
+    if (access) CFRelease(access);
+#pragma clang diagnostic pop
+    return st == errSecSuccess;
 }
 
 void keychainDelete(const QString &service, const QString &account) {
