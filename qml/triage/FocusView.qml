@@ -9,6 +9,11 @@ FocusScope {
     property real zoom: 1
     property point pan: Qt.point(0, 0)
     property Item inspectorItem: null
+    function overInspector(sx, sy) {
+        if (!inspectorItem || !inspectorItem.visible) return false
+        const p = inspectorItem.mapFromItem(null, sx, sy)
+        return p.x >= 0 && p.x <= inspectorItem.width && p.y >= 0 && p.y <= inspectorItem.height
+    }
 
     function resetView() { zoom = 1; pan = Qt.point(0, 0) }
     function setPan(x, y) {   // keep the picture from being thrown off-screen
@@ -120,6 +125,7 @@ FocusScope {
             target: studio
             enabled: root.visible && root.entry && !root.entry.isVideo
             function onMagnified(x, y, mag, phase) {
+                if (root.overInspector(x, y)) return          // pinching over the floating panel is not for the image behind it
                 if (phase & 1) { stage.pinchSum = 0; stage.pinchOn = false }
                 if ((phase & 24) && !(phase & 6)) { stage.pinchOn = false; stage.pinchSum = 0; return }
                 if (clickGuard.running || (!stage.pinchOn && Date.now() - stage.lastScrollMs < 200)) return

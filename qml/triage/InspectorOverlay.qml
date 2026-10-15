@@ -68,6 +68,9 @@ Item {
             border.color: Qt.rgba(1, 1, 1, 0.06)
             anchors.margins: 1
         }
+        // The panel floats over the grid / focus view: every click, drag, scroll and hover that lands on it stays on it.
+        // (Without this the cards or the zoomable image underneath also received them.)
+        MouseArea { anchors.fill: parent; acceptedButtons: Qt.AllButtons; hoverEnabled: true; onWheel: w => w.accepted = true }
         InspectorPanel { anchors.fill: parent; entry: root.entry }
     }
 
@@ -86,6 +89,6 @@ Item {
             rotation: 180 * root.prog
         }
         HoverHandler { id: toggleHover; cursorShape: Qt.PointingHandCursor }
-        TapHandler { onTapped: triage.inspectorOpen = !triage.inspectorOpen }
+        MouseArea { anchors.fill: parent; acceptedButtons: Qt.AllButtons; onClicked: triage.inspectorOpen = !triage.inspectorOpen; onWheel: w => w.accepted = true }
     }
 }
