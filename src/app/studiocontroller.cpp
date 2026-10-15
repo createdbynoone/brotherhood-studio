@@ -96,7 +96,7 @@ void StudioController::restart() {
     d.cdUp(); d.cdUp();
     const QString bundle = d.absolutePath();
     if (bundle.endsWith(".app")) {
-        QProcess::startDetached("/bin/sh", {"-c", QStringLiteral("while kill -0 %1 2>/dev/null; do sleep 0.2; done; /usr/bin/open -n \"%2\"")
+        QProcess::startDetached("/bin/sh", {"-c", QStringLiteral("while kill -0 %1 2>/dev/null; do sleep 0.2; done; unset QT_SCALE_FACTOR BS_SCALE_APPLIED; /usr/bin/open -n \"%2\"")
                                                        .arg(QCoreApplication::applicationPid()).arg(bundle)});
     }
     QCoreApplication::quit();
