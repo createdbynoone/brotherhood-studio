@@ -14,8 +14,8 @@
 //   openssl kdf -keylen 64 -kdfopt digest:SHA512 -kdfopt pass:'NEW' -kdfopt hexsalt:<salt> -kdfopt iter:200000 PBKDF2
 namespace AppLock {
 
-static const char *kSaltHex = "1b2b0cb131d133d28ff17a07cf8fc82a";
-static const char *kHashHex = "4ccbf4703f3ede32ebd7f31a914ad62a156a6ae1d8bbfcfb4b14ec254ff2d48225ffbcdfefc0016f794e8ac4f5c4bb51d03cafa4c2442fb276f3f2ad6aabc3e0";
+static const char *kSaltHex = "de423425f51e838f33dbbbff3d9e5775";
+static const char *kHashHex = "25c9859bc7c723faa1d99af9139405cfc3f67ddcfae9b74f86fb49084060aa7e6a62ed51e592e2a4a6ddb335e677fbd182f491ebcb5ca401a0d2a62e75fab41c";
 static const quint32 kIterations = 200000;
 static const QString kService = QStringLiteral("com.brotherhood.studio.qt");
 
