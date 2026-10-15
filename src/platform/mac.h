@@ -26,8 +26,6 @@ QImage downsample(const QString &path, int maxPixel);
 QImage videoFrame(const QString &path, int maxSide);
 /// "W x H" for images, "W x H . m:ss" for video (empty when unreadable).
 QString mediaInfo(const QString &path);
-/// Cover-crop (never letterbox) composite as JPEG data.
-QByteArray composeCover(const QString &path, int w, int h, double quality);
 
 // ── Files ────────────────────────────────────────────────────────────────
 bool trashItem(const QString &path);       // volume-correct Trash; true when the file is gone

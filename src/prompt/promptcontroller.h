@@ -3,6 +3,9 @@
 #include <QStringList>
 #include <QThreadPool>
 #include <QUrl>
+#include <atomic>
+
+class QTimer;
 #include <QVariantList>
 
 #include "logmodel.h"
@@ -25,6 +28,11 @@ class PromptController : public QObject {
     Q_PROPERTY(QString providerLabel READ providerLabel NOTIFY providerChanged)
     Q_PROPERTY(QStringList ratios READ ratios NOTIFY providerChanged)
     Q_PROPERTY(QStringList resolutions READ resolutions NOTIFY providerChanged)
+    Q_PROPERTY(QStringList qualities READ qualities NOTIFY providerChanged)
+    Q_PROPERTY(QString quality READ quality WRITE setQuality NOTIFY fireSettingsChanged)
+    Q_PROPERTY(bool costKnown READ costKnown NOTIFY costChanged)
+    Q_PROPERTY(double costPerImage READ costPerImage NOTIFY costChanged)
+    Q_PROPERTY(double fireCost READ fireCost NOTIFY costChanged)          // per image x variations
     Q_PROPERTY(QString aspectRatio READ aspectRatio WRITE setAspectRatio NOTIFY fireSettingsChanged)
     Q_PROPERTY(QString resolution READ resolution WRITE setResolution NOTIFY fireSettingsChanged)
     Q_PROPERTY(int variations READ variations WRITE setVariations NOTIFY fireSettingsChanged)
@@ -65,6 +73,12 @@ public:
     QString providerLabel() const;
     QStringList ratios() const;
     QStringList resolutions() const;
+    QStringList qualities() const;
+    QString quality() const { return m_quality; }
+    void setQuality(const QString &q);
+    bool costKnown() const { return m_costKnown; }
+    double costPerImage() const { return m_cost; }
+    double fireCost() const { return m_cost * m_variations; }
     QString aspectRatio() const { return m_ratio; }
     void setAspectRatio(const QString &r);
     QString resolution() const { return m_resolution; }
@@ -99,6 +113,7 @@ public:
     Q_INVOKABLE void fire();
     Q_INVOKABLE void reset();
     Q_INVOKABLE void clearLog();
+    Q_INVOKABLE void demoLog();            // sample lines for design review (--open log)
     Q_INVOKABLE void usePrompt(const QString &p);
     Q_INVOKABLE QVariantList history() const;
     Q_INVOKABLE void setOutputPath(const QString &path);
@@ -120,6 +135,7 @@ signals:
     void logCountChanged();
     void memoryChanged();
     void creditsChanged();
+    void costChanged();
     void outputPathChanged();
     void missingToolsChanged();
     void showLoginChanged();
@@ -134,7 +150,10 @@ private:
     QString inputSignature() const;
     bool fireGate();
     bool runJob(const QString &prompt, const QStringList &products, const QString &ratio, const QString &res,
-                int provider, const QStringList &refIds);
+                const QString &quality, int provider, const QStringList &refIds);
+    void scheduleCost();
+    void estimateCost();
+    void startCreditsWatch();
     void refreshMemoryStats();
     void emitOutputVisibility();
 
@@ -151,7 +170,7 @@ private:
     QString m_memoryId;
 
     int m_provider = 1;     // Nano Banana Pro
-    QString m_ratio, m_resolution = "2k";
+    QString m_ratio, m_resolution = "2k", m_quality = "high";
     int m_variations = 1;
 
     int m_tasks = 0;
@@ -159,6 +178,11 @@ private:
     qint64 m_lastFire = 0;
 
     int m_memTotal = 0, m_memFired = 0;
+    QTimer *m_costTimer = nullptr, *m_creditsTimer = nullptr;
+    int m_costTicket = 0;
+    bool m_costKnown = false;
+    double m_cost = 0;
+    std::atomic<bool> m_creditsBusy{false};
     bool m_hasCredits = false;
     double m_credits = 0;
     QString m_plan;

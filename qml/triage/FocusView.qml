@@ -8,7 +8,6 @@ FocusScope {
     readonly property var entry: triage.focusEntry
     property real zoom: 1
     property point pan: Qt.point(0, 0)
-    signal exportRequested(string path)
     property Item inspectorItem: null
 
     function resetView() { zoom = 1; pan = Qt.point(0, 0) }
@@ -60,7 +59,6 @@ FocusScope {
             Txt { text: (triage.focusIndex + 1) + " of " + triage.focusCount; variant: "caption"; muted: true; rightPadding: 8; anchors.verticalCenter: parent.verticalCenter }
             Btn { kind: "ghost"; size: "s"; icon: "caret-left"; iconWeight: "bold"; tip: "Previous"; hint: "←"; enabled: triage.focusIndex > 0; onClicked: triage.focusNavigate(-1) }
             Btn { kind: "ghost"; size: "s"; icon: "caret-right"; iconWeight: "bold"; tip: "Next"; hint: "→"; enabled: triage.focusIndex < triage.focusCount - 1; onClicked: triage.focusNavigate(1) }
-            Btn { visible: root.entry && !root.entry.isVideo; kind: "ghost"; size: "s"; icon: "export"; text: "Export"; hint: "E"; onClicked: root.exportRequested(root.entry.path) }
             Btn { kind: "ghost"; size: "s"; icon: "sidebar"; tip: "Inspector"; hint: "I"; onClicked: triage.inspectorOpen = !triage.inspectorOpen }
         }
     }
@@ -159,7 +157,7 @@ FocusScope {
             anchors.margins: 16
             MediaPlayer {
                 id: player
-                source: root.entry && root.entry.isVideo ? "file://" + encodeURI(root.entry.path) : ""
+                source: root.entry && root.entry.isVideo ? Theme.fileUrl(root.entry.path) : ""
                 videoOutput: vo
                 audioOutput: AudioOutput {}
                 loops: MediaPlayer.Infinite
@@ -205,7 +203,7 @@ FocusScope {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 14
             Txt { visible: root.zoom !== 1; text: Math.round(root.zoom * 100) + "%"; variant: "caption"; muted: true }
-            Txt { text: "← →  navigate     K M D A U  status     N  note     E  export"; variant: "caption"; muted: true }
+            Txt { text: "← →  navigate     K M D A U  status     N  note"; variant: "caption"; muted: true }
         }
     }
 
@@ -223,7 +221,6 @@ FocusScope {
         case Qt.Key_A: triage.focusStatus(4); break
         case Qt.Key_N: triage.focusNote = true; triage.inspectorOpen = true; break
         case Qt.Key_R: if (root.entry) triage.reveal(root.entry.path); break
-        case Qt.Key_E: if (root.entry && !root.entry.isVideo) root.exportRequested(root.entry.path); break
         case Qt.Key_I: triage.inspectorOpen = !triage.inspectorOpen; break
         default: return
         }

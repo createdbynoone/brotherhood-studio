@@ -43,5 +43,7 @@ QString studioLayout() { const QString s = get(Paths::studioPrefs(), "layout").t
 double studioSplitFraction() { const auto v = get(Paths::studioPrefs(), "splitFraction"); return v.isDouble() ? v.toDouble() : 0.44; }
 void setStudioLayout(const QString &layout) { set(Paths::studioPrefs(), "layout", layout); }
 void setStudioSplitFraction(double v) { set(Paths::studioPrefs(), "splitFraction", v); }
+int studioUiScale() { const int v = get(Paths::studioPrefs(), "uiScale").toInt(100); return qBound(50, v, 100); }
+void setStudioUiScale(int percent) { set(Paths::studioPrefs(), "uiScale", qBound(50, percent, 100)); }
 
 }  // namespace Prefs

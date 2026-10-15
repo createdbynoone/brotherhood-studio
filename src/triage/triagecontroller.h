@@ -110,7 +110,6 @@ public:
     Q_INVOKABLE void reveal(const QString &path);
     Q_INVOKABLE void open(const QString &path);
     Q_INVOKABLE QString mediaInfo(const QString &path) const;
-    Q_INVOKABLE void exportEntry(const QString &path, const QStringList &sizeKeys, const QUrl &folder);
     Q_INVOKABLE void stepGrid(int dir);
 
 signals:

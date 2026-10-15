@@ -139,11 +139,16 @@ Item {
         id: dragProxy
         Drag.dragType: Drag.Automatic
         Drag.supportedActions: Qt.CopyAction
-        Drag.mimeData: root.entry ? ({ "text/uri-list": "file://" + encodeURI(root.entry.path) }) : ({})
+        // The whole selection travels when the card belongs to it. The extra key marks the drag as ours, so the
+        // grid itself does not take it for an import of files it already has.
+        Drag.mimeData: root.entry ? ({ "text/uri-list": triage.contextTarget(root.entry.path).map(Theme.fileUrl).join("\r\n"),
+                                       "application/x-brotherhood-card": root.entry.path }) : ({})
         Drag.active: dragHandler.active
         // the drag shows the thumbnail itself instead of the file URL as text
         Drag.imageSource: root.entry ? root.entry.thumbSource : ""
         Drag.hotSpot: Qt.point(Math.min(root.width, 200) / 2, Math.min(root.height, 200) / 2)
     }
-    DragHandler { id: dragHandler; target: null; acceptedButtons: Qt.LeftButton; dragThreshold: 8 }
+    // Threshold below the grid's marquee handler (GridArea): both are DragHandlers, and whichever crosses its threshold first
+    // keeps the grab. With the marquee at 4 px it won almost every slow start and the card never lifted.
+    DragHandler { id: dragHandler; target: null; acceptedButtons: Qt.LeftButton; dragThreshold: 6 }
 }

@@ -10,6 +10,7 @@ Item {
         prompt.boot(); triage.boot(); studio.checkForUpdate()
         if (startOpen === "settings") settings.open()
         else if (startOpen === "palette") palette.show()
+        else if (startOpen === "log") prompt.demoLog()
         else if (startOpen === "focus") Qt.callLater(() => focusTimer.start())
     }
     Timer { id: focusTimer; interval: 1800; onTriggered: { triage.moveAnchor(1, 0); triage.openFocus() } }
@@ -69,7 +70,6 @@ Item {
     Shortcut { sequences: ["Ctrl+,"]; onActivated: settings.open() }
     Shortcut { sequences: ["Ctrl+I"]; enabled: studio.layout !== "prompt"; onActivated: triagePane.requestImport() }
     Shortcut { sequences: ["Ctrl+Alt+R"]; enabled: studio.layout !== "prompt"; onActivated: triage.rescan() }
-    Shortcut { sequences: ["Ctrl+E"]; enabled: studio.layout !== "prompt" && triage.anchorEntry !== null && !triage.anchorEntry.isVideo; onActivated: triagePane.requestExport(triage.anchorEntry.path) }
     Shortcut { sequences: ["Ctrl+Shift+R"]; enabled: studio.layout !== "prompt" && triage.anchorEntry !== null; onActivated: triage.reveal(triage.anchorEntry.path) }
     Shortcut { sequences: ["Ctrl+Shift+D"]; enabled: studio.layout !== "prompt"; onActivated: triage.clearSelection() }
     Shortcut { sequences: ["Ctrl+Backspace"]; enabled: studio.layout !== "prompt" && (triage.statusCounts[3] || 0) > 0; onActivated: triagePane.requestTrash() }
@@ -98,13 +98,14 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 14
             BrandMark { size: 34; anchors.verticalCenter: parent.verticalCenter }
-            Wordmark { size: 19; anchors.verticalCenter: parent.verticalCenter }
+            Wordmark { visible: view.width >= 1240; size: 19; anchors.verticalCenter: parent.verticalCenter }
         }
 
         Segment {
             anchors.centerIn: parent
             height_: 40; fontSize: 12; hPad: 22; gap: 6; inset: 4; heading: true
-            options: [{ key: "prompt", label: "Marketing Prompts" }, { key: "split", label: "Split" }, { key: "triage", label: "Generation Sorter" }]
+            options: view.width >= 1080 ? [{ key: "prompt", label: "Marketing Prompts" }, { key: "split", label: "Split" }, { key: "triage", label: "Generation Sorter" }]
+                                        : [{ key: "prompt", label: "Prompts" }, { key: "split", label: "Split" }, { key: "triage", label: "Sorter" }]
             current: studio.layout
             onPicked: key => studio.layout = key
         }
@@ -133,7 +134,9 @@ Item {
 
             // Palette
             Rectangle {
+                id: palBox
                 width: paletteRow.implicitWidth + 20; height: 28
+                readonly property bool slim: view.width < 1240
                 radius: Theme.rControl
                 color: palHover.hovered ? Theme.elevated : Theme.raised
                 border.color: palHover.hovered ? Theme.hairlineStrong : Theme.hairline
@@ -143,7 +146,7 @@ Item {
                     anchors.centerIn: parent
                     spacing: 8
                     Icon { name: "magnifying-glass"; size: 13; color: Theme.textDim; anchors.verticalCenter: parent.verticalCenter }
-                    Txt { text: "Search actions"; variant: "small"; dim: true; anchors.verticalCenter: parent.verticalCenter }
+                    Txt { visible: !palBox.slim; text: "Search actions"; variant: "small"; dim: true; anchors.verticalCenter: parent.verticalCenter }
                     Txt { text: "⌘K"; variant: "mono"; muted: true; anchors.verticalCenter: parent.verticalCenter }
                 }
                 HoverHandler { id: palHover; cursorShape: Qt.PointingHandCursor }

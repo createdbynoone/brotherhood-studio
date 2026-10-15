@@ -20,8 +20,8 @@ Popup {
     FolderDialog {
         id: outputPicker
         title: "Choose the output folder"
-        currentFolder: "file://" + prompt.outputPath
-        onAccepted: prompt.setOutputPath(selectedFolder.toString().replace("file://", ""))
+        currentFolder: Theme.fileUrl(prompt.outputPath)
+        onAccepted: prompt.setOutputPath(decodeURIComponent(selectedFolder.toString().replace("file://", "")))
     }
 
     component Section: Column {
@@ -94,6 +94,25 @@ Popup {
                         Btn { kind: "ghost"; size: "xs"; text: "Open"; onClicked: studio.openFolder(prompt.outputPath) }
                     }
                     Row_ { label: "Higgsfield images are saved here, and Generation Sorter watches the same folder"; height: 38 }
+                }
+                Section {
+                    heading: "Interface"
+                    Row_ {
+                        label: "Scale"
+                        Segment {
+                            height_: 26; fontSize: 11; hPad: 9
+                            options: [100, 90, 80, 70, 60, 50].map(v => ({ key: v, label: v + "%" }))
+                            current: studio.uiScale
+                            onPicked: key => studio.uiScale = key
+                        }
+                    }
+                    Row_ {
+                        visible: studio.uiScale !== studio.activeUiScale
+                        height: visible ? 44 : 0
+                        label: "Restart to apply " + studio.uiScale + "%"
+                        Btn { kind: "primary"; size: "xs"; text: "Restart now"; onClicked: studio.restart() }
+                    }
+                    Row_ { label: "A smaller scale fits more on screen and lets the window shrink further"; height: 38 }
                 }
                 Section {
                     heading: "Marketing Prompts"

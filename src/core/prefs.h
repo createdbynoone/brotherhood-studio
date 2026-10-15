@@ -23,5 +23,8 @@ QString studioLayout();                    // "prompt" | "split" | "triage"
 double studioSplitFraction();
 void setStudioLayout(const QString &layout);
 void setStudioSplitFraction(double v);
+/// Interface scale in percent (100, 90, 80, 70, 60, 50). Read before QGuiApplication exists: it sets QT_SCALE_FACTOR.
+int studioUiScale();
+void setStudioUiScale(int percent);
 
 }

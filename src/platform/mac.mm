@@ -168,34 +168,6 @@ QString mediaInfo(const QString &path) {
     return p.ok ? QStringLiteral("%1 × %2").arg(p.w).arg(p.h) : QString();
 }
 
-QByteArray composeCover(const QString &path, int w, int h, double quality) {
-    CGImageSourceRef src = openSource(path);
-    if (!src) return {};
-    NSDictionary *opts = @{(__bridge id)kCGImageSourceShouldCacheImmediately: @YES};
-    CGImageRef img = CGImageSourceCreateImageAtIndex(src, 0, (__bridge CFDictionaryRef)opts);
-    CFRelease(src);
-    if (!img) return {};
-    CGColorSpaceRef cs = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
-    CGContextRef ctx = CGBitmapContextCreate(nullptr, w, h, 8, 0, cs, kCGImageAlphaNoneSkipLast);
-    CGColorSpaceRelease(cs);
-    if (!ctx) { CGImageRelease(img); return {}; }
-    CGContextSetRGBFillColor(ctx, 1, 1, 1, 1);
-    CGContextFillRect(ctx, CGRectMake(0, 0, w, h));
-    CGContextSetInterpolationQuality(ctx, kCGInterpolationHigh);
-    const double scale = MAX((double)w / CGImageGetWidth(img), (double)h / CGImageGetHeight(img));
-    const double sw = CGImageGetWidth(img) * scale, sh = CGImageGetHeight(img) * scale;
-    CGContextDrawImage(ctx, CGRectMake((w - sw) / 2, (h - sh) / 2, sw, sh), img);
-    CGImageRef outImg = CGBitmapContextCreateImage(ctx);
-    CGContextRelease(ctx);
-    CGImageRelease(img);
-    if (!outImg) return {};
-    NSMutableData *data = [NSMutableData data];
-    bool ok = writeJpeg(outImg, data, quality);
-    CGImageRelease(outImg);
-    if (!ok) return {};
-    return QByteArray(reinterpret_cast<const char *>(data.bytes), (qsizetype)data.length);
-}
-
 // ── Files ────────────────────────────────────────────────────────────────
 
 bool trashItem(const QString &path) {

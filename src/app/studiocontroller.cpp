@@ -31,6 +31,8 @@ StudioController::StudioController(QObject *parent) : QObject(parent) {
     m_active = m_layout == "triage" ? "triage" : "prompt";
     m_unlocked = AppLock::isRemembered();
     m_reduceMotion = Mac::reduceMotion();
+    m_uiScale = Prefs::studioUiScale();
+    m_activeUiScale = qEnvironmentVariableIsSet("BS_SCALE_APPLIED") ? qEnvironmentVariableIntValue("BS_SCALE_APPLIED") : m_uiScale;
     m_nam = new QNetworkAccessManager(this);
 }
 
@@ -78,6 +80,26 @@ void StudioController::verifyKey(const QString &key) {
             emit keyResult(ok, until);
         }, Qt::QueuedConnection);
     });
+}
+
+void StudioController::setUiScale(int percent) {
+    percent = qBound(50, percent, 100);
+    if (percent == m_uiScale) return;
+    m_uiScale = percent;
+    Prefs::setStudioUiScale(percent);
+    emit uiScaleChanged();
+}
+
+// Qt reads QT_SCALE_FACTOR once, at startup, so a new scale needs a fresh process: wait for this one to exit, reopen.
+void StudioController::restart() {
+    QDir d(QCoreApplication::applicationDirPath());
+    d.cdUp(); d.cdUp();
+    const QString bundle = d.absolutePath();
+    if (bundle.endsWith(".app")) {
+        QProcess::startDetached("/bin/sh", {"-c", QStringLiteral("while kill -0 %1 2>/dev/null; do sleep 0.2; done; /usr/bin/open -n \"%2\"")
+                                                       .arg(QCoreApplication::applicationPid()).arg(bundle)});
+    }
+    QCoreApplication::quit();
 }
 
 void StudioController::forgetKey() { AppLock::forget(); emit toast(QStringLiteral("The key will be asked again on next launch"), 0); }

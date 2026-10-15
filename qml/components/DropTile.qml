@@ -55,7 +55,7 @@ Item {
             Image {
                 anchors.fill: parent
                 anchors.margins: 1
-                source: root.files.length > 0 && root.mode === "single" ? "file://" + root.files[0] : ""
+                source: root.files.length > 0 && root.mode === "single" ? Theme.fileUrl(root.files[0]) : ""
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
                 sourceSize.height: 640
@@ -91,7 +91,7 @@ Item {
                     clip: true
                     Image {
                         anchors.fill: parent; anchors.margins: 1
-                        source: "file://" + thumb.modelData
+                        source: Theme.fileUrl(thumb.modelData)
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         sourceSize.height: 260

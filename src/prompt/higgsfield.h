@@ -24,6 +24,8 @@ bool isInstalled();
 bool isAuthenticated();
 void login();                                     // OAuth in the browser, 120 s cap
 Credits credits();
+/// Credits one generation would cost (`generate cost`, no job is created); -1 when the CLI cannot tell.
+double cost(const QString &jobType, const Params &params);
 QString upload(const QString &path);
 /// Ordered params -> `--flag-name=value` args (the `=` form is required for cobra bool flags).
 QStringList args(const Params &params);

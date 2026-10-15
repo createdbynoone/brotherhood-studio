@@ -25,7 +25,7 @@ tools/         gen_prompts.py, gen_icons.py, uitest.swift, release.sh
 - `src/prompt/prompts.cpp` se GENERA con `tools/gen_prompts.py` desde `Prompts.swift`; `system` debe ser byte-idéntico al SYSTEM_PROMPT de Electron.
 - Lock: misma passphrase (PBKDF2-SHA512 200k). El token de desbloqueo es un archivo 0600 (`BrotherhoodStudioQt/unlock.token`, HMAC atado a la Mac y al hash de la clave): la clave se pide una vez por Mac. NO usar Keychain: su ACL queda atada a la firma de cada release (ad-hoc) y macOS pide la contraseña tras cada actualización.
 - Resultados de BMP: `bmp_<ms>.<ext>` en `outputPath`; el Sorter vigila ese patrón. `PromptController::saved` → `TriageController::ingest` los muestra al instante.
-- NB 2.1 siempre lleva `thinking_level=high` (fijo en `Provider`).
+- Motores (`providers()` en `promptcontroller.cpp`): Seedream 5.0 Pro, Nano Banana Pro y **GPT Sunburst** (= `gpt_image_2_5` con `variant=sunburst`; lleva `quality` low/medium/high/xhigh/max, por defecto high). NB 2.1 ya no existe. Un `Provider` declara `qualities` y `fixed` (parámetros que siempre se envían).
 
 ## Diseño
 - Una paleta cálida-oscura, UN acento naranja `#F54F1B` (texto sobre él: `#0B0B0A`, AA). Radios: control 8, card 12, panel 16. Tres tonos de texto, todos AA.
@@ -65,3 +65,11 @@ Cada release está firmado ad-hoc: macOS puede volver a pedir el permiso de Docu
 - **Semáforo**: `installTitleBarDrag` deja pasar los clics sobre los botones estándar de la ventana.
 - Arrastrar una card muestra su miniatura (`Drag.imageSource`) en vez del URL como texto. Márgenes: grid `kPad = 20`, botón del inspector a 16 pt del borde.
 - `--open focus` abre el primer item en Focus (capturas con `--grab --delay 9000`: las imágenes grandes tardan en decodificar).
+
+## Cambios post 1.0.9 (sin publicar)
+- **Exportar eliminado** (diálogo, menú, botón de Focus, atajo ⌘E, `exportEntry`, `composeCover`).
+- **Costo en el botón de lanzar**: `Higgsfield::cost` (`higgsfield generate cost`, sin crear job) por imagen × variaciones, con debounce de 300 ms al cambiar motor/ratio/resolución/calidad. **Créditos en vivo**: `refreshCredits` cada 15 s con la app al frente, al volver a primer plano, 3 s después de enviar un job y al terminar cualquiera (cobro al crear, reembolso al fallar).
+- **Arrastre**: el `DragHandler` de la card (umbral 6) debe cruzar su umbral ANTES que el del marquee del grid (12); con el marquee en 4 ganaba casi siempre y la card no se levantaba. URLs con `Theme.fileUrl` (`encodeURI` deja pasar `#` y `?`). El drag lleva toda la selección y la clave `application/x-brotherhood-card` para que el grid no lo tome por una importación. NO verificado con un arrastre real (no hay forma de simularlo sin tocar la pantalla).
+- **Activity** dibujado como terminal (`ActivityLog.qml`): verde fósforo sobre casi negro, mono, prefijo por tipo (`$ ✓ ✗ ! >`), cursor de bloque con Timer lento. `--open log` carga líneas de muestra.
+- **Escala de interfaz** (Ajustes > Interface, 100 a 50 %): `QT_SCALE_FACTOR` se fija en `main()` antes de crear la app leyendo `uiScale` de `studio-prefs.json`; cambiarla pide reiniciar (`StudioController::restart`). Las coordenadas que llegan de AppKit en puntos (pellizco, arrastre de la barra) se dividen por el factor. Ventana mínima 900x560; la barra superior y el filtro del Sorter se compactan al estrechar.
+- Menú contextual: "Use as reference/product in Prompt" (antes "BMP").

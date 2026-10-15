@@ -58,6 +58,13 @@ Credits credits() {
     return c;
 }
 
+double cost(const QString &jobType, const Params &params) {
+    try {
+        const auto o = json(QStringList{"generate", "cost", jobType} + args(params), 20000).object();
+        return o.value("credits").isDouble() ? o.value("credits").toDouble() : -1;
+    } catch (const Err &) { return -1; }
+}
+
 QString upload(const QString &path) {
     const QString id = json({"upload", "create", path}).object().value("id").toString();
     if (id.isEmpty()) throw Err(QStringLiteral("No file in response"));

@@ -21,6 +21,8 @@ class StudioController : public QObject {
     Q_PROPERTY(bool checkingUpdate READ checkingUpdate NOTIFY updateChanged)
     Q_PROPERTY(bool updating READ updating NOTIFY updatingChanged)
     Q_PROPERTY(double updateProgress READ updateProgress NOTIFY updatingChanged)       // 0..1
+    Q_PROPERTY(int uiScale READ uiScale WRITE setUiScale NOTIFY uiScaleChanged)        // chosen, percent; applies on relaunch
+    Q_PROPERTY(int activeUiScale READ activeUiScale CONSTANT)                         // the scale this run started with
     Q_PROPERTY(QString updateError READ updateError NOTIFY updatingChanged)
 
 public:
@@ -42,6 +44,9 @@ public:
     bool checkingUpdate() const { return m_checking; }
     bool updating() const { return m_updating; }
     double updateProgress() const { return m_progress; }
+    int uiScale() const { return m_uiScale; }
+    void setUiScale(int percent);
+    int activeUiScale() const { return m_activeUiScale; }
     QString updateError() const { return m_updateError; }
 
     Q_INVOKABLE void verifyKey(const QString &key);      // async; emits keyResult
@@ -50,6 +55,7 @@ public:
     Q_INVOKABLE void cyclePane();
     Q_INVOKABLE void dismissUpdate();
     Q_INVOKABLE void checkForUpdate();
+    Q_INVOKABLE void restart();             // quit and open the app again (applies the interface scale)
     Q_INVOKABLE void installUpdate();       // download the release zip, replace this app, relaunch
     Q_INVOKABLE void copyText(const QString &text);
     Q_INVOKABLE void openUrl(const QUrl &url);
@@ -72,6 +78,7 @@ signals:
     void lockChanged();
     void updateChanged();
     void updatingChanged();
+    void uiScaleChanged();
     void keyResult(bool ok, double lockUntil);
     void toast(const QString &message, int kind);
 
@@ -80,6 +87,7 @@ private:
     double m_split;
     bool m_unlocked = false;
     bool m_reduceMotion = false;
+    int m_uiScale = 100, m_activeUiScale = 100;
     bool m_checking = false;
     QString m_updateVersion;
     QUrl m_updateUrl;

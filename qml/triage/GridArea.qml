@@ -16,7 +16,6 @@ FocusScope {
     // the cards continuously, so the arrangement is held and the gallery reflows once, at the end,
     // toward a stable target.
     property bool freeze: false
-    signal exportRequested(string path)
 
     Component.onCompleted: { gallery.setViewport(width, triage.gridSize); gallery.setScroll(flick.contentY, flick.height); forceActiveFocus() }
     onWidthChanged: if (!freeze) gallery.setViewport(width, triage.gridSize)
@@ -212,10 +211,8 @@ FocusScope {
         MenuItem { text: "Archive"; onTriggered: triage.toggleStatus(ctx.paths, 4) }
         MenuItem { text: "Mark unsorted"; onTriggered: triage.setStatus(ctx.paths, 0) }
         MenuSeparator {}
-        MenuItem { text: "Use as reference in BMP"; enabled: !ctx.many; onTriggered: prompt.addRefs(["file://" + encodeURI(ctx.paths[0])]) }
-        MenuItem { text: "Use as product in BMP"; onTriggered: prompt.addProducts(ctx.paths.map(p => "file://" + encodeURI(p))) }
-        MenuSeparator {}
-        MenuItem { text: "Export..."; enabled: !ctx.many && ctx.target && !ctx.target.isVideo; onTriggered: root.exportRequested(ctx.paths[0]) }
+        MenuItem { text: "Use as reference in Prompt"; enabled: !ctx.many; onTriggered: prompt.addRefs([Theme.fileUrl(ctx.paths[0])]) }
+        MenuItem { text: "Use as product in Prompt"; onTriggered: prompt.addProducts(ctx.paths.map(p => Theme.fileUrl(p))) }
     }
 
     // ── Marquee ──────────────────────────────────────────────────────────
@@ -233,7 +230,7 @@ FocusScope {
         id: marqueeDrag
         target: null
         acceptedButtons: Qt.LeftButton
-        dragThreshold: 4
+        dragThreshold: 12                  // above the cards' own drag handler (MediaCard): see there
         onActiveChanged: {
             if (active && root.pressInGap) {
                 const m = Qt.application.keyboardModifiers
@@ -294,6 +291,8 @@ FocusScope {
     DropArea {
         id: drop
         anchors.fill: parent
+        // a card dragged from this very grid is not an import
+        onEntered: drag => { if (drag.formats.indexOf("application/x-brotherhood-card") >= 0) drag.accepted = false }
         onDropped: ev => { if (ev.hasUrls) triage.importPaths(ev.urls) }
     }
     Rectangle {

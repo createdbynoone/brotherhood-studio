@@ -63,5 +63,8 @@ QtObject {
     readonly property int slow: ms(460)
     readonly property var curveLayout: [0.22, 1, 0.36, 1, 1, 1]      // ease-out-quint: panes glide, never snap
 
+    // file:// URL for a local path. encodeURI leaves # and ? alone, which cuts the name there
+    function fileUrl(path) { return "file://" + path.split("/").map(encodeURIComponent).join("/") }
+
     function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
 }

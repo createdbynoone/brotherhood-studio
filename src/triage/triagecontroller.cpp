@@ -496,30 +496,3 @@ void TriageController::focusStatus(int s) {
 void TriageController::reveal(const QString &path) { Mac::revealInFinder(path); }
 void TriageController::open(const QString &path) { QDesktopServices::openUrl(QUrl::fromLocalFile(path)); }
 QString TriageController::mediaInfo(const QString &path) const { return Mac::mediaInfo(path); }
-
-void TriageController::exportEntry(const QString &path, const QStringList &sizeKeys, const QUrl &folder) {
-    if (!folder.isLocalFile() || sizeKeys.isEmpty()) return;
-    const QString dir = folder.toLocalFile();
-    struct Size { QString key; int w, h; };
-    static const QList<Size> all = {{"box", 1080, 1080}, {"vertical", 1080, 1920}};
-    QList<Size> chosen;
-    for (const auto &s : all) if (sizeKeys.contains(s.key)) chosen << s;
-    const QString base = QFileInfo(path).completeBaseName();
-    (void)QtConcurrent::run([=, this] {
-        QStringList saved;
-        QString error;
-        for (const auto &s : chosen) {
-            const QByteArray data = Mac::composeCover(path, s.w, s.h, 0.95);
-            if (data.isEmpty()) { error = QStringLiteral("No se pudo componer %1×%2").arg(s.w).arg(s.h); break; }
-            const QString out = QStringLiteral("%1/%2_%3×%4.jpg").arg(dir, base).arg(s.w).arg(s.h);
-            QFile f(out);
-            if (!f.open(QIODevice::WriteOnly) || f.write(data) != data.size()) { error = QStringLiteral("No se pudo guardar %1").arg(QFileInfo(out).fileName()); break; }
-            saved << out;
-        }
-        QMetaObject::invokeMethod(this, [=, this] {
-            if (!error.isEmpty()) { emit toast(error, 2); return; }
-            emit toast(QStringLiteral("%1 file%2 exported").arg(saved.size()).arg(saved.size() == 1 ? "" : "s"), 1);
-            if (!saved.isEmpty()) Mac::revealInFinder(saved.first());
-        }, Qt::QueuedConnection);
-    });
-}

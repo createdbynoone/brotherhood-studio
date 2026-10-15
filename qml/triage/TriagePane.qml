@@ -9,7 +9,6 @@ Rectangle {
     property bool freezeLayout: false      // hold the grid's arrangement while the pane itself is gliding
     color: Theme.bg
     readonly property bool focusing: triage.focusIndex >= 0
-    function requestExport(path) { exportDialog.openFor(path) }
     function requestTrash() { trashConfirm.open() }
     function requestImport() { importDialog.open() }
 
@@ -48,13 +47,12 @@ Rectangle {
                 visible: !root.focusing
                 freeze: root.freezeLayout
                 inspectorItem: inspector.panel
-                onExportRequested: path => exportDialog.openFor(path)
             }
             Loader {
                 id: focusLoader
                 anchors.fill: parent
                 active: root.focusing
-                sourceComponent: FocusView { inspectorItem: inspector.panel; onExportRequested: path => exportDialog.openFor(path) }
+                sourceComponent: FocusView { inspectorItem: inspector.panel }
             }
             InspectorOverlay {
                 id: inspector
@@ -83,7 +81,6 @@ Rectangle {
         MenuItem { text: "Extra large  400 px"; checkable: true; checked: triage.gridSize === 400; onTriggered: triage.gridSize = 400 }
     }
 
-    ExportDialog { id: exportDialog }
     ConfirmDialog {
         id: trashConfirm
         title: "Move " + (triage.statusCounts[3] || 0) + " discarded files to the Trash?"
