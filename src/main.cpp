@@ -10,6 +10,7 @@
 #include "app/studiocontroller.h"
 #include "core/prefs.h"
 #include "platform/mac.h"
+#include "platform/memtrim.h"
 #include "prompt/promptcontroller.h"
 #include "triage/thumbprovider.h"
 #include "triage/triagecontroller.h"
@@ -85,6 +86,10 @@ int main(int argc, char *argv[]) {
             return hit.toBool();
         });
     });
+
+    // Gives memory back while the app sits in the background (see memtrim.h). BS_TRIM_NOW=1: trim once, 8 s after start (tests)
+    auto *memTrim = new MemTrim(&engine, window, nullptr, &app);
+    if (qEnvironmentVariableIntValue("BS_TRIM_NOW") > 0) QTimer::singleShot(8000, memTrim, [memTrim] { memTrim->trim(true); });
 
     // --transition split:triage:/tmp/frames   settle on `from`, switch to `to`, save frames while it animates
     if (cli.isSet(transition)) {

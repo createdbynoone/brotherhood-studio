@@ -17,6 +17,7 @@ set(APP_SOURCES
     src/core/prefs.cpp
     src/core/lock.cpp
     src/platform/mac.mm
+    src/platform/memtrim.cpp
     src/prompt/shell.cpp
     src/prompt/prompts.cpp
     src/prompt/memorystore.cpp

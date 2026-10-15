@@ -98,7 +98,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 14
             BrandMark { size: 34; anchors.verticalCenter: parent.verticalCenter }
-            Wordmark { visible: view.width >= 1240; size: 19; anchors.verticalCenter: parent.verticalCenter }
+            Wordmark { visible: view.width >= 1420; size: 19; anchors.verticalCenter: parent.verticalCenter }
         }
 
         Segment {
