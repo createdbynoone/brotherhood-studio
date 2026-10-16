@@ -70,30 +70,37 @@ Rectangle {
             boundsBehavior: Flickable.StopAtBounds
             ScrollBar.vertical: StudioScrollBar {}
             onCountChanged: Qt.callLater(() => positionViewAtEnd())
-            delegate: Row {
+            // The ListView positions each delegate itself (x is reset to 0), so the side margin lives on an inner row
+            delegate: Item {
+                id: entry
                 required property string time
                 required property string line
                 required property int kind
-                x: 24
-                width: list.width - 48
-                spacing: 8
-                Text { text: "[" + time + "]"; color: root.dimInk; font.family: Theme.mono; font.pixelSize: 11; width: 66; renderType: Text.QtRendering }
-                Text { text: root.prefix(kind); color: root.tone(kind); font.family: Theme.mono; font.pixelSize: 12; font.bold: true; width: 10; horizontalAlignment: Text.AlignHCenter; renderType: Text.QtRendering }
-                Text {
-                    width: parent.width - 66 - 10 - 16
-                    text: line.replace(/^▶\s*/, "").replace(/\s*✓$/, "")
-                    wrapMode: Text.Wrap
-                    color: root.tone(kind)
-                    font.family: Theme.mono; font.pixelSize: 12
-                    lineHeight: 1.15
-                    renderType: Text.QtRendering
+                width: list.width
+                height: lineRow.implicitHeight
+                Row {
+                    id: lineRow
+                    x: 26
+                    width: entry.width - 52
+                    spacing: 8
+                    Text { text: "[" + entry.time + "]"; color: root.dimInk; font.family: Theme.mono; font.pixelSize: 11; width: 66; renderType: Text.QtRendering }
+                    Text { text: root.prefix(entry.kind); color: root.tone(entry.kind); font.family: Theme.mono; font.pixelSize: 12; font.bold: true; width: 10; horizontalAlignment: Text.AlignHCenter; renderType: Text.QtRendering }
+                    Text {
+                        width: parent.width - 66 - 10 - 16
+                        text: entry.line.replace(/^▶\s*/, "").replace(/\s*✓$/, "")
+                        wrapMode: Text.Wrap
+                        color: root.tone(entry.kind)
+                        font.family: Theme.mono; font.pixelSize: 12
+                        lineHeight: 1.15
+                        renderType: Text.QtRendering
+                    }
                 }
             }
             // the prompt line: a block cursor that blinks on a slow timer (no continuous animation)
             footer: Item {
                 width: list.width; height: 22
                 Row {
-                    x: 24; y: 4
+                    x: 26; y: 4
                     spacing: 8
                     Text { text: "[--:--:--]"; color: "transparent"; font.family: Theme.mono; font.pixelSize: 11; width: 66 }
                     Text { text: "$"; color: root.actInk; font.family: Theme.mono; font.pixelSize: 12; font.bold: true; width: 10; horizontalAlignment: Text.AlignHCenter }

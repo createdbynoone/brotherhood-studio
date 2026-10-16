@@ -31,7 +31,6 @@ Rectangle {
             }
             Btn { kind: "ghost"; size: "s"; icon: "arrow-clockwise"; tip: "Rescan the output folder"; hint: "⌘⌥R"; onClicked: triage.rescan() }
             Btn { kind: "ghost"; size: "s"; icon: "folder-plus"; tip: "Import a folder"; hint: "⌘I"; onClicked: importDialog.open() }
-            Btn { kind: "ghost"; size: "s"; icon: "sidebar"; tip: "Toggle inspector"; hint: "I"; onClicked: triage.inspectorOpen = !triage.inspectorOpen }
         }
 
         FilterStrip { width: parent.width; visible: !root.focusing; height: visible ? implicitHeight : 0 }
