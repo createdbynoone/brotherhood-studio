@@ -64,7 +64,6 @@ FocusScope {
             Txt { text: (triage.focusIndex + 1) + " of " + triage.focusCount; variant: "caption"; muted: true; rightPadding: 8; anchors.verticalCenter: parent.verticalCenter }
             Btn { kind: "ghost"; size: "s"; icon: "caret-left"; iconWeight: "bold"; tip: "Previous"; hint: "←"; enabled: triage.focusIndex > 0; onClicked: triage.focusNavigate(-1) }
             Btn { kind: "ghost"; size: "s"; icon: "caret-right"; iconWeight: "bold"; tip: "Next"; hint: "→"; enabled: triage.focusIndex < triage.focusCount - 1; onClicked: triage.focusNavigate(1) }
-            Btn { kind: "ghost"; size: "s"; icon: "sidebar"; tip: "Inspector"; hint: "I"; onClicked: triage.inspectorOpen = !triage.inspectorOpen }
         }
     }
 
