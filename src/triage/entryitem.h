@@ -12,6 +12,7 @@ class EntryItem : public QObject {
     Q_PROPERTY(QString fingerprint READ fingerprint NOTIFY fingerprintChanged)
     Q_PROPERTY(int status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString note READ note NOTIFY noteChanged)
+    Q_PROPERTY(QString model READ model NOTIFY modelChanged)
     Q_PROPERTY(bool isVideo READ isVideo CONSTANT)
     Q_PROPERTY(bool missing READ missing NOTIFY missingChanged)
     Q_PROPERTY(bool isNew READ isNew NOTIFY isNewChanged)
@@ -33,6 +34,7 @@ public:
     QString fingerprint() const { return m_fingerprint; }
     int status() const { return m_status; }
     QString note() const { return m_note; }
+    QString model() const { return m_model; }
     bool isVideo() const { return m_isVideo; }
     bool missing() const { return m_missing; }
     bool isNew() const { return m_isNew; }
@@ -50,6 +52,7 @@ public:
     void setFingerprint(const QString &f);
     void setStatus(int s);
     void setNote(const QString &n);
+    void setModel(const QString &m);
     void setMissing(bool m);
     void setIsNew(bool n);
     void setSelected(bool s);
@@ -65,6 +68,7 @@ signals:
     void fingerprintChanged();
     void statusChanged();
     void noteChanged();
+    void modelChanged();
     void missingChanged();
     void isNewChanged();
     void selectedChanged();
@@ -74,7 +78,7 @@ signals:
 
 private:
     QJsonObject m_raw;       // unknown keys from other builds survive a round trip
-    QString m_path, m_fingerprint, m_note;
+    QString m_path, m_fingerprint, m_note, m_model;
     int m_status = 0, m_source = 0, m_rating = 0;
     double m_addedAt = 0, m_updatedAt = 0;
     bool m_isVideo = false, m_missing = false, m_hasMissingKey = false;

@@ -1,4 +1,5 @@
 #pragma once
+#include <QHash>
 #include <QObject>
 #include <QSet>
 #include <QUrl>
@@ -72,7 +73,10 @@ public:
     Q_INVOKABLE void rescan();
     Q_INVOKABLE void importPaths(const QList<QUrl> &urls);
     Q_INVOKABLE void importFolder(const QUrl &folder);
-    Q_INVOKABLE void ingest(const QString &path);
+    Q_INVOKABLE void ingest(const QString &path, const QString &model = QString());   // a file this app just generated
+    Q_INVOKABLE QString modelOf(const QString &path);                                // recorded model, else read from the file's metadata
+    Q_INVOKABLE bool allHaveCategory(const QStringList &paths, const QString &categoryId);
+    Q_INVOKABLE void toggleCategories(const QStringList &paths, const QString &categoryId);   // on for all, or off when all already have it
     void flushNow() { m_store.flushSync(); }
 
     // selection
@@ -129,6 +133,7 @@ signals:
     void scrollToPath(const QString &path);      // keep the anchor visible after keyboard navigation
 
 private:
+    QHash<QString, QString> m_modelCache;
     void onStoreChanged();
     void recompute();                 // filtered list, groups, rows, counts
     void rebuildRows();

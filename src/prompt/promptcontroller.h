@@ -141,7 +141,7 @@ signals:
     void showLoginChanged();
     void inputsChanged();
     void outputVisibilityChanged();
-    void saved(const QString &path);       // a generated file landed in the output folder
+    void saved(const QString &path, const QString &model);       // a generated file landed in the output folder (and which engine made it)
     void toast(const QString &message, int kind);   // 0 info, 1 ok, 2 error
 
 private:

@@ -436,7 +436,7 @@ bool PromptController::runJob(const QString &prompt, const QStringList &products
         Downloader::download(job.resultUrl, dest);
         const auto props = Mac::imageProps(dest);
         const QString savedLine = props.ok ? QStringLiteral("Saved: %1 · %2×%3px").arg(name).arg(props.w).arg(props.h) : QStringLiteral("Saved: %1").arg(name);
-        post([=, this] { push(savedLine); emit saved(dest); });
+        post([=, this] { push(savedLine); emit saved(dest, p.label); });
         return true;
     } catch (const Err &e) {
         post([this, msg = e.msg] { push("Error: " + msg); });

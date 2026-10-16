@@ -15,6 +15,7 @@ EntryItem::EntryItem(const QJsonObject &raw, QObject *parent) : QObject(parent),
     m_rating = raw["rating"].toInt();
     for (const auto &c : raw["categories"].toArray()) m_categories << c.toString();
     m_note = raw["note"].toString();
+    m_model = raw["model"].toString();
     m_source = Triage::sourceFromName(raw["source"].toString());
     m_addedAt = raw["addedAt"].toDouble();
     m_updatedAt = raw["updatedAt"].toDouble();
@@ -41,6 +42,7 @@ QJsonObject EntryItem::toJson() const {
     for (const auto &c : m_categories) cats.append(c);
     o["categories"] = cats;
     o["note"] = m_note;
+    if (!m_model.isEmpty()) o["model"] = m_model;
     o["source"] = Triage::sourceName(m_source);
     o["addedAt"] = m_addedAt;
     o["updatedAt"] = m_updatedAt;
@@ -64,6 +66,7 @@ QString EntryItem::thumbSource() const {
 
 void EntryItem::setFingerprint(const QString &f) { if (m_fingerprint != f) { m_fingerprint = f; emit fingerprintChanged(); } }
 void EntryItem::setStatus(int s) { if (m_status != s) { m_status = s; emit statusChanged(); } }
+void EntryItem::setModel(const QString &m) { if (m_model != m) { m_model = m; emit modelChanged(); } }
 void EntryItem::setNote(const QString &n) { if (m_note != n) { m_note = n; emit noteChanged(); } }
 void EntryItem::setMissing(bool m) { if (m_missing != m) { m_missing = m; emit missingChanged(); } }
 void EntryItem::setIsNew(bool n) { if (m_isNew != n) { m_isNew = n; emit isNewChanged(); } }

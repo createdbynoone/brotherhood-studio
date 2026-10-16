@@ -29,6 +29,7 @@ set(APP_SOURCES
     src/prompt/promptcontroller.cpp
     src/triage/triagetypes.cpp
     src/triage/entryitem.cpp
+    src/triage/modeldetect.cpp
     src/triage/store.cpp
     src/triage/watcher.cpp
     src/triage/gallerymodel.cpp

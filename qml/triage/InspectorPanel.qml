@@ -69,6 +69,19 @@ Item {
                     Btn { kind: "secondary"; size: "xs"; text: "Open"; onClicked: triage.open(root.entry.path) }
                     Txt { visible: root.entry && root.entry.missing; text: "Missing"; variant: "caption"; color: Theme.warn; anchors.verticalCenter: parent.verticalCenter }
                 }
+                // Which engine made the image: recorded when this app generated it, else read from the file's metadata
+                Row {
+                    topPadding: 6
+                    spacing: 8
+                    Txt { text: "Model"; variant: "label"; dim: true; anchors.verticalCenter: parent.verticalCenter }
+                    Rectangle {
+                        readonly property string model: root.entry && !root.entry.isVideo ? (root.entry.model, triage.modelOf(root.entry.path)) : ""
+                        height: 24; width: modelText.implicitWidth + 20; radius: Theme.rControl
+                        color: Theme.raised; border.color: model.length > 0 ? Theme.hairlineStrong : Theme.hairline
+                        anchors.verticalCenter: parent.verticalCenter
+                        Txt { id: modelText; anchors.centerIn: parent; text: parent.model.length > 0 ? parent.model : "Unknown"; variant: "caption"; dim: parent.model.length === 0; font.pixelSize: 12 }
+                    }
+                }
             }
 
             Hairline {}
@@ -130,8 +143,8 @@ Item {
                         delegate: Chip {
                             required property var modelData
                             text: modelData.name
-                            active: root.entry && root.entry.categories.indexOf(modelData.id) >= 0
-                            onClicked: triage.toggleCategory(root.entry.path, modelData.id)
+                            active: { triage.selectedCount; triage.revision; return !!root.entry && triage.allHaveCategory(triage.contextTarget(root.entry.path), modelData.id) }
+                            onClicked: triage.toggleCategories(triage.contextTarget(root.entry.path), modelData.id)
                             onRightClicked: { chipMenu.cat = modelData; chipMenu.popup() }
                         }
                     }
@@ -142,7 +155,7 @@ Item {
                         placeholder: "New category"
                         onAccepted: {
                             const id = triage.addCategory(text, "")
-                            if (id.length) triage.toggleCategory(root.entry.path, id)
+                            if (id.length) triage.toggleCategories(triage.contextTarget(root.entry.path), id)
                             root.addingFor = "none"
                         }
                         inputItem.Keys.onEscapePressed: root.addingFor = "none"
@@ -168,8 +181,8 @@ Item {
                         delegate: Chip {
                             required property var modelData
                             text: modelData.name
-                            active: root.entry && root.entry.categories.indexOf(modelData.id) >= 0
-                            onClicked: triage.toggleCategory(root.entry.path, modelData.id)
+                            active: { triage.selectedCount; triage.revision; return !!root.entry && triage.allHaveCategory(triage.contextTarget(root.entry.path), modelData.id) }
+                            onClicked: triage.toggleCategories(triage.contextTarget(root.entry.path), modelData.id)
                             onRightClicked: { chipMenu.cat = modelData; chipMenu.popup() }
                         }
                     }
@@ -180,7 +193,7 @@ Item {
                         placeholder: "New product"
                         onAccepted: {
                             const id = triage.addCategory(text, root.activeParent)
-                            if (id.length) triage.toggleCategory(root.entry.path, id)
+                            if (id.length) triage.toggleCategories(triage.contextTarget(root.entry.path), id)
                             root.addingFor = "none"
                         }
                         inputItem.Keys.onEscapePressed: root.addingFor = "none"

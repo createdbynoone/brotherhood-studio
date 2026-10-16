@@ -1,4 +1,5 @@
 #include "triagecontroller.h"
+#include "modeldetect.h"
 
 #include "../core/paths.h"
 #include "../core/prefs.h"
@@ -70,7 +71,26 @@ void TriageController::markNew(const QList<EntryItem *> &added) {
     }
 }
 
-void TriageController::ingest(const QString &path) { markNew(m_store.reconcile({path}, Desktop)); }
+void TriageController::ingest(const QString &path, const QString &model) {
+    markNew(m_store.reconcile({path}, Desktop));
+    // The folder watcher may have created the entry first, so look it up rather than relying on reconcile's result
+    if (!model.isEmpty()) if (auto *e = m_store.entry(path)) { if (e->model().isEmpty()) { e->setModel(model); m_store.touch(); } }
+}
+
+// What the inspector shows as the generating model. Recorded by this app when it generated the image; for older or
+// imported files it comes from the embedded content credentials; failing both, only the aspect ratio can hint.
+QString TriageController::modelOf(const QString &path) {
+    if (auto *e = m_store.entry(path); e && !e->model().isEmpty()) return e->model();
+    auto it = m_modelCache.constFind(path);
+    if (it != m_modelCache.constEnd()) return it.value();
+    QString m = ModelDetect::fromMetadata(path);
+    if (m.isEmpty()) {
+        const auto p = Mac::imageProps(path);
+        if (p.ok && p.w > 0 && p.h > 0 && qAbs(double(p.w) / p.h - 0.75) < 0.004) m = QStringLiteral("Seedream 5.0 Pro (est.)");   // 3:4 is only offered by Seedream
+    }
+    m_modelCache.insert(path, m);
+    return m;
+}
 
 void TriageController::importFolder(const QUrl &folder) {
     if (!folder.isLocalFile()) return;
@@ -361,6 +381,23 @@ void TriageController::toggleStatus(const QStringList &paths, int target) {
 
 void TriageController::setNote(const QString &path, const QString &note) {
     if (auto *e = m_store.entry(path)) { e->setNote(note.left(4000)); e->touchUpdated(); m_store.touch(); }
+}
+
+bool TriageController::allHaveCategory(const QStringList &paths, const QString &id) {
+    if (paths.isEmpty()) return false;
+    for (const auto &p : paths) { auto *e = m_store.entry(p); if (!e || !e->categories().contains(id)) return false; }
+    return true;
+}
+
+// A selection toggles together: if every image already has the category it comes off all of them, otherwise it goes on
+// every image that lacks it (never flips some on and some off).
+void TriageController::toggleCategories(const QStringList &paths, const QString &id) {
+    const bool remove = allHaveCategory(paths, id);
+    for (const auto &p : paths) {
+        auto *e = m_store.entry(p);
+        if (!e || e->categories().contains(id) != remove) continue;
+        toggleCategory(p, id);
+    }
 }
 
 void TriageController::toggleCategory(const QString &path, const QString &id) {

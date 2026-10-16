@@ -28,7 +28,7 @@ Rectangle {
         Item {
             width: parent.width; height: 34
             Row {
-                anchors.left: parent.left; anchors.leftMargin: 14
+                anchors.left: parent.left; anchors.leftMargin: 22
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 7
                 Repeater {
@@ -49,7 +49,7 @@ Rectangle {
             }
             Item {
                 id: clearBtn
-                anchors.right: parent.right; anchors.rightMargin: 10
+                anchors.right: parent.right; anchors.rightMargin: 16
                 anchors.verticalCenter: parent.verticalCenter
                 width: clearText.implicitWidth + 16; height: 22
                 Rectangle { anchors.fill: parent; radius: 5; color: clearHover.hovered ? Qt.rgba(0.29, 0.87, 0.5, 0.12) : "transparent" }
@@ -66,7 +66,7 @@ Rectangle {
             clip: true
             model: prompt.log
             spacing: 2
-            topMargin: 10; bottomMargin: 10
+            topMargin: 14; bottomMargin: 12
             boundsBehavior: Flickable.StopAtBounds
             ScrollBar.vertical: StudioScrollBar {}
             onCountChanged: Qt.callLater(() => positionViewAtEnd())
@@ -74,8 +74,8 @@ Rectangle {
                 required property string time
                 required property string line
                 required property int kind
-                x: 14
-                width: list.width - 28
+                x: 24
+                width: list.width - 48
                 spacing: 8
                 Text { text: "[" + time + "]"; color: root.dimInk; font.family: Theme.mono; font.pixelSize: 11; width: 66; renderType: Text.QtRendering }
                 Text { text: root.prefix(kind); color: root.tone(kind); font.family: Theme.mono; font.pixelSize: 12; font.bold: true; width: 10; horizontalAlignment: Text.AlignHCenter; renderType: Text.QtRendering }
@@ -93,7 +93,7 @@ Rectangle {
             footer: Item {
                 width: list.width; height: 22
                 Row {
-                    x: 14; y: 4
+                    x: 24; y: 4
                     spacing: 8
                     Text { text: "[--:--:--]"; color: "transparent"; font.family: Theme.mono; font.pixelSize: 11; width: 66 }
                     Text { text: "$"; color: root.actInk; font.family: Theme.mono; font.pixelSize: 12; font.bold: true; width: 10; horizontalAlignment: Text.AlignHCenter }
