@@ -1,5 +1,7 @@
 # Brotherhood Studio (Qt 6 / C++)
 
+> Mapa general del proyecto (estado, decisiones, pruebas, publicar): `BLUEPRINT.md`. Este archivo guarda el detalle y las trampas.
+
 BMP (Brotherhood Marketing Prompts) y Sorter (triage de generaciones) en una sola app de macOS con dos paneles. Lógica en C++20, interfaz en QML (Qt Quick, controles propios), capa nativa de Apple en Objective-C++. Reemplaza a BMP Native y Sorter Native (SwiftUI) y a las apps Electron.
 
 **Build:** `brew install qt cmake ninja` · `cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=$(brew --prefix qt) && cmake --build build` → `build/Brotherhood Studio.app`.
@@ -66,7 +68,7 @@ Cada release está firmado ad-hoc: macOS puede volver a pedir el permiso de Docu
 - Arrastrar una card muestra su miniatura (`Drag.imageSource`) en vez del URL como texto. Márgenes: grid `kPad = 20`, botón del inspector a 16 pt del borde.
 - `--open focus` abre el primer item en Focus (capturas con `--grab --delay 9000`: las imágenes grandes tardan en decodificar).
 
-## Cambios post 1.0.9 (sin publicar)
+## Cambios 1.1.x (publicados en 1.1.0 a 1.1.3)
 - **Exportar eliminado** (diálogo, menú, botón de Focus, atajo ⌘E, `exportEntry`, `composeCover`).
 - **Costo en el botón de lanzar**: `Higgsfield::cost` (`higgsfield generate cost`, sin crear job) por imagen × variaciones, con debounce de 300 ms al cambiar motor/ratio/resolución/calidad. **Créditos en vivo**: `refreshCredits` cada 15 s con la app al frente, al volver a primer plano, 3 s después de enviar un job y al terminar cualquiera (cobro al crear, reembolso al fallar).
 - **Arrastre**: el `DragHandler` de la card (umbral 6) debe cruzar su umbral ANTES que el del marquee del grid (12); con el marquee en 4 ganaba casi siempre y la card no se levantaba. URLs con `Theme.fileUrl` (`encodeURI` deja pasar `#` y `?`). El drag lleva toda la selección y la clave `application/x-brotherhood-card` para que el grid no lo tome por una importación. NO verificado con un arrastre real (no hay forma de simularlo sin tocar la pantalla).
