@@ -106,6 +106,7 @@ FocusScope {
             enabled: root.entry && !root.entry.isVideo
             acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
             onWheel: event => {
+                if (Theme.shielded(point.scenePosition.x, point.scenePosition.y)) return
                 stage.lastScrollMs = Date.now()
                 const trackpad = event.pixelDelta.x !== 0 || event.pixelDelta.y !== 0
                 const cmd = (event.modifiers & (Qt.ControlModifier | Qt.MetaModifier)) !== 0
@@ -144,15 +145,16 @@ FocusScope {
             enabled: root.zoom > 1 && root.entry && !root.entry.isVideo
             acceptedDevices: PointerDevice.Mouse
             property point origin
-            onActiveChanged: if (active) origin = root.pan
-            onTranslationChanged: if (active) root.setPan(origin.x + translation.x, origin.y + translation.y)
+            property bool blocked: false
+            onActiveChanged: if (active) { blocked = Theme.shielded(centroid.scenePressPosition.x, centroid.scenePressPosition.y); origin = root.pan }
+            onTranslationChanged: if (active && !blocked) root.setPan(origin.x + translation.x, origin.y + translation.y)
         }
         TapHandler {
             enabled: root.entry && !root.entry.isVideo
             gesturePolicy: TapHandler.ReleaseWithinBounds
             onPressedChanged: clickGuard.restart()
             // a single click never touches the zoom: only a double click resets it (or zooms in from 1x)
-            onDoubleTapped: root.zoomTo(root.zoom > 1.01 ? 1 : 2.5, point.position.x, point.position.y)
+            onDoubleTapped: if (!Theme.shielded(point.scenePosition.x, point.scenePosition.y)) root.zoomTo(root.zoom > 1.01 ? 1 : 2.5, point.position.x, point.position.y)
         }
 
         // Video

@@ -10,6 +10,8 @@ Item {
     property int topInset: 0         // Focus view: keep the panel below its top bar and above its status bar
     property int bottomInset: 0
     readonly property alias panel: panel
+    Component.onCompleted: Theme.shield = panel
+    Component.onDestruction: if (Theme.shield === panel) Theme.shield = null
     readonly property int panelWidth: 300
     readonly property int inset: 12
     readonly property bool open: triage.inspectorOpen

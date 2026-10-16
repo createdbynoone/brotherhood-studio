@@ -66,5 +66,14 @@ QtObject {
     // file:// URL for a local path. encodeURI leaves # and ? alone, which cuts the name there
     function fileUrl(path) { return "file://" + path.split("/").map(encodeURIComponent).join("/") }
 
+    // The floating inspector. Pointer handlers on items underneath it (cards, group headers, the zoomable image) still
+    // received the clicks that landed on its BUTTONS, so they ask here whether a scene point is covered by the panel.
+    property Item shield: null
+    function shielded(sx, sy) {
+        if (!shield || !shield.visible) return false
+        const p = shield.mapFromItem(null, sx, sy)
+        return p.x >= 0 && p.y >= 0 && p.x <= shield.width && p.y <= shield.height
+    }
+
     function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
 }

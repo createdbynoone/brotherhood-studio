@@ -154,7 +154,7 @@ FocusScope {
                         name: node.collapsed ? "caret-right" : "caret-down"; weight: "bold"; size: 12; color: Theme.textMuted
                     }
                     HoverHandler { cursorShape: Qt.PointingHandCursor }
-                    TapHandler { onTapped: triage.toggleGroup(node.groupId) }
+                    TapHandler { onTapped: eventPoint => { if (!Theme.shielded(eventPoint.scenePosition.x, eventPoint.scenePosition.y)) triage.toggleGroup(node.groupId) } }
                 }
 
                 // Product header

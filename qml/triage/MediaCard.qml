@@ -7,7 +7,7 @@ import QtQuick.Effects
 Item {
     id: root
     property var entry
-    property bool hovered: hover.hovered
+    property bool hovered: hover.hovered && !Theme.shielded(hover.point.scenePosition.x, hover.point.scenePosition.y)
     signal contextRequested()
 
     readonly property bool sel: entry ? entry.selected : false
@@ -126,13 +126,14 @@ Item {
     HoverHandler { id: hover }
     TapHandler {
         acceptedButtons: Qt.LeftButton
-        onTapped: {
+        onTapped: eventPoint => {
+            if (Theme.shielded(eventPoint.scenePosition.x, eventPoint.scenePosition.y)) return
             const m = Qt.application.keyboardModifiers
             triage.click(root.entry.path, (m & Qt.ControlModifier) !== 0, (m & Qt.ShiftModifier) !== 0)
         }
-        onDoubleTapped: triage.openFocus(root.entry.path)
+        onDoubleTapped: eventPoint => { if (!Theme.shielded(eventPoint.scenePosition.x, eventPoint.scenePosition.y)) triage.openFocus(root.entry.path) }
     }
-    TapHandler { acceptedButtons: Qt.RightButton; onTapped: root.contextRequested() }
+    TapHandler { acceptedButtons: Qt.RightButton; onTapped: eventPoint => { if (!Theme.shielded(eventPoint.scenePosition.x, eventPoint.scenePosition.y)) root.contextRequested() } }
 
     // Native drag-out: hands the ORIGINAL file to Finder / BMP / any drop target
     Item {
@@ -143,7 +144,7 @@ Item {
         // grid itself does not take it for an import of files it already has.
         Drag.mimeData: root.entry ? ({ "text/uri-list": triage.contextTarget(root.entry.path).map(Theme.fileUrl).join("\r\n"),
                                        "application/x-brotherhood-card": root.entry.path }) : ({})
-        Drag.active: dragHandler.active
+        Drag.active: dragHandler.active && !Theme.shielded(dragHandler.centroid.scenePressPosition.x, dragHandler.centroid.scenePressPosition.y)
         // the drag shows the thumbnail itself instead of the file URL as text
         Drag.imageSource: root.entry ? root.entry.thumbSource : ""
         Drag.hotSpot: Qt.point(Math.min(root.width, 200) / 2, Math.min(root.height, 200) / 2)
