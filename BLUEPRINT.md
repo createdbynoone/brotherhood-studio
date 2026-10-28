@@ -1,7 +1,7 @@
 # Brotherhood Studio: blueprint
 
 Foto del proyecto para retomarlo o rehacerlo. El detalle técnico y las trampas ya resueltas viven en `CLAUDE.md` (leerlo primero); aquí está el mapa.
-Estado al 2026-10-27: **v1.1.3 publicada** (`createdbynoone/brotherhood-studio`, 2026-10-16). Hay trabajo SIN publicar encima, sin commit: fondo opcional + LOOKBOOK en Prompts y el panel Ecommerce con sus ajustes del 27 oct (secciones de abajo).
+Estado al 2026-10-28: **v1.2.0 publicada** (`createdbynoone/brotherhood-studio`): Ecommerce, tarjeta Camera, Background/LOOKBOOK y Split como botón. v1.1.3 fue la anterior. El zip público NO incluye la biblioteca de estilo de Ecommerce (fotos de la marca).
 
 ## Qué es
 BMP (Brotherhood Marketing Prompts), Ecommerce (fotos de catálogo con prompts JSON) y Sorter (clasificador de generaciones) en una sola app de macOS (Prompts, Ecommerce, Sorter; el botón naranja Split muestra Prompts + Sorter). Qt 6 / C++20, interfaz QML, capa nativa Objective-C++. Reemplazó a BMP Native y Sorter Native (SwiftUI) y a las apps Electron.
@@ -11,13 +11,13 @@ Referencia + producto → Sonnet escribe el brief → Opus escribe el prompt (`p
 
 Motores (`providers()` en `promptcontroller.cpp`): Seedream 5.0 Pro · Nano Banana Pro · **GPT Sunburst** (= `gpt_image_2_5` con `variant=sunburst`; calidad low…max). El botón de lanzar muestra el costo de la tanda (`higgsfield generate cost`) y los créditos de la esquina se actualizan solos (poll de 15 s y tras cada job).
 
-## Fondo y realismo (sin publicar)
+## Fondo y realismo (publicado en 1.2.0)
 Prompts tiene una tarjeta **Background** opcional (recomendada): foto de la ubicación real que el motor recibe como última referencia. Sin ella, el prompt exige un lugar real y fotografiable con look de cine (bloque REALISM STANDARD). El bloque **LOOKBOOK** destila 17 referencias de streetwear real (garajes, pasos peatonales, mallas, flash, grano de película). Esas fotos están en `~/Library/Application Support/BrotherhoodStudioQt/look-library/` (no empaquetadas: son de terceros) y el botón "Library" del Background las ofrece; las de lugares vacíos llevan prefijo `plate-`. Detalle en `CLAUDE.md`.
 
-## Cámara (sin publicar)
+## Cámara (publicada en 1.2.0)
 Tarjeta **Camera** en Prompts: cámara, lente, apertura, obturador, ISO, balance de blancos, look de color/película, flash, altura, distancia y óptica, con 6 presets y Auto. Viaja a Opus como bloque `CAMERA SETTINGS` que exige la línea [CAMERA] exacta y las consecuencias físicas descritas (bokeh, grano, color de luz, flash...) para generaciones más realistas. Datos en `src/prompt/camera.cpp`; se guarda en `studio-prefs.json`. Pendiente: comparar generaciones reales con y sin ajustes.
 
-## Ecommerce (sin publicar)
+## Ecommerce (publicado en 1.2.0)
 **Solo GPT Sunburst y solo 1:1** (sin selector de motor ni de ratio). Fotos del producto (hasta 8: frente, espalda, ángulos y detalles; + referencia de layout opcional + notas) → Opus lee todas, detecta el tipo, mide la **silueta y cada costura** (`product.silhouette`, `product.seam_map`, `photo_views`) y la empareja con la **biblioteca de estilo de casa** (33 fotos de los drops 1 y 2: fondo blanco, maniquí invisible, encuadre fijo por categoría; el lienzo cuadrado es el 4:5 de la casa ensanchado con blanco, así el producto conserva su tamaño de catálogo) → JSON con layout y objetivos de retoque (sin arrugas, costuras perfectas, gráficos exactos) → disparo como edición. Casilla **"Shoot the back too"** (solo prendas, no gorras/gorros/bolsos): el JSON gana `back_spec` (medida de las fotos o inferida del frente) y cada variación dispara frente + espalda (`ecom_<ms>.jpg` y `ecom_<ms>_back.jpg`, costo x2). Las imágenes llegan al Sorter al instante. Salida en `<salida>/Ecommerce/` (con el JSON al lado). Las fotos de la biblioteca viven en `resources/ecom-style/` (fuera de git) y se copian a `~/Library/Application Support/BrotherhoodStudioQt/ecom-style/`, donde se añaden los drops nuevos. Pendiente: **probar un disparo real a Higgsfield** (solo se probó el análisis con la CLI y el compilado; ver si la trucker mejora silueta y costuras, y probar con y sin foto de espalda), historial de JSON.
 
 ## Arquitectura en una pantalla
@@ -58,7 +58,7 @@ Mismos archivos que las apps anteriores: `~/Library/Application Support/BMP/{bmp
 - Nada de `tools/uitest.swift` si el usuario trabaja en otras apps.
 
 ## Publicar
-1. Subir `VERSION` en `CMakeLists.txt`. 2. `tools/release.sh` (~7 min, en background). 3. Validar el zip (firma, versión, hash nuevo, sin libs de Homebrew, sin `SKIP_LOCK`, sin secretos). 4. commit + tag + push + `gh release create`. **Solo con visto bueno del usuario.**
+1. Subir `VERSION` en `CMakeLists.txt`. 2. `tools/release.sh` (~7 min, en background; apaga `BS_BUNDLE_ECOM_STYLE`; si la ruta lleva `&`, `BS_BUILD_DIR` apuntando a otra carpeta). 3. Validar el zip (firma, versión, hash nuevo, sin libs de Homebrew, sin `SKIP_LOCK`, sin secretos). 4. commit + tag + push + `gh release create`. **Solo con visto bueno del usuario.**
 
 ## Seguridad
 Repo público sin claves de API, tokens ni referencias a MCP (repos, historial y zips escaneados). El hash del lock es público; el anterior sigue en el historial y esa clave está quemada.
