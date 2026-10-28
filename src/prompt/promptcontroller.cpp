@@ -4,9 +4,11 @@
 #include "../core/paths.h"
 #include "../core/prefs.h"
 #include "../platform/mac.h"
+#include "camera.h"
 #include "claude.h"
 #include "downloader.h"
 #include "higgsfield.h"
+#include "providers.h"
 #include "memorystore.h"
 #include "shell.h"
 #include "staging.h"
@@ -22,36 +24,11 @@
 
 namespace {
 
-struct Provider {
-    QString shortLabel, label, jobType;
-    QStringList ratios, resolutions;
-    int maxRefs;
-    QStringList qualities;                          // empty: the model has no quality setting
-    QString defaultQuality;
-    QList<QPair<QString, QString>> fixed;           // always-sent params (a model variant, ...)
-};
-
-// Seedream 5.0 Pro has no 4:5 in its aspect_ratio enum (3:4 is its closest portrait).
-// First ratio is the provider default.
-const QList<Provider> &providers() {
-    static const QList<Provider> p = {
-        {"Seedream", "Seedream 5.0 Pro", "seedream_v5_pro", {"3:4", "9:16"}, {"1k", "2k"}, 10, {}, {}, {}},
-        {"NB Pro", "Nano Banana Pro", "nano_banana_pro", {"4:5", "9:16"}, {"1k", "2k", "4k"}, 14, {}, {}, {}},
-        // GPT Image 2.5 in its Sunburst variant (the other one is Flare)
-        {"GPT Sunburst", "GPT Image 2.5 Sunburst", "gpt_image_2_5", {"4:5", "9:16", "1:1"}, {"1k", "2k", "4k"}, 10,
-         {"low", "medium", "high", "xhigh", "max"}, "high", {{"variant", "sunburst"}}},
-    };
-    return p;
-}
-
-// Params that decide the price (the prompt and references do not), in the order `generate create` takes them
-Higgsfield::Params priceParams(const Provider &p, const QString &ratio, const QString &res, const QString &quality) {
-    Higgsfield::Params params = {{"aspect_ratio", p.ratios.contains(ratio) ? ratio : p.ratios.first()},
-                                 {"resolution", p.resolutions.contains(res) ? res : p.resolutions.last()},
-                                 {"prompt", QStringLiteral("cost estimate")}};
-    if (!p.qualities.isEmpty()) params.append(qMakePair(QStringLiteral("quality"), QVariant(p.qualities.contains(quality) ? quality : p.defaultQuality)));
-    for (const auto &f : p.fixed) params.append(qMakePair(f.first, QVariant(f.second)));
-    return params;
+// Caps a reference list at `max`, always keeping its last `tail` entries (the background plate rides at the end)
+QStringList keepTail(const QStringList &list, int tail, int max) {
+    if (list.size() <= max) return list;
+    tail = qBound(0, tail, max);
+    return list.mid(0, max - tail) + list.mid(list.size() - tail);
 }
 
 const QSet<QString> &imageExts() {
@@ -75,6 +52,11 @@ PromptController::PromptController(QObject *parent) : QObject(parent) {
     m_pool.setMaxThreadCount(24);
     m_ratio = providers().at(m_provider).ratios.first();
     m_outputPath = Prefs::outputPath();
+    {   // the camera look is a standing setting: restore it, keeping only values that still exist
+        const QVariantMap saved = Prefs::studioCamera();
+        for (const auto &st : Camera::settings())
+            for (const auto &o : st.options) if (saved.value(st.id).toString() == o.value) m_camera.insert(st.id, o.value);
+    }
     connect(&m_log, &QAbstractItemModel::rowsInserted, this, [this] { emit logCountChanged(); emitOutputVisibility(); });
     connect(&m_log, &QAbstractItemModel::rowsRemoved, this, [this] { emit logCountChanged(); });
     connect(&m_log, &QAbstractItemModel::modelReset, this, [this] { emit logCountChanged(); emitOutputVisibility(); });
@@ -142,6 +124,47 @@ void PromptController::setQuality(const QString &q) { if (m_quality != q && prov
 void PromptController::setVariations(int n) { n = qBound(1, n, 4); if (m_variations != n) { m_variations = n; emit fireSettingsChanged(); emit costChanged(); } }
 void PromptController::setBrief(const QString &b) { if (m_brief != b) { m_brief = b; emit briefChanged(); } }
 void PromptController::setRefSpecs(const QString &s) { if (m_refSpecs != s) { m_refSpecs = s; emit refSpecsChanged(); } }
+
+// ── Camera ───────────────────────────────────────────────────────────────
+QVariantList PromptController::cameraSettings() const {
+    QVariantList out;
+    for (const auto &s : Camera::settings()) {
+        QStringList opts;
+        for (const auto &o : s.options) opts << o.value;
+        out << QVariantMap{{"id", s.id}, {"title", s.title}, {"options", opts}};
+    }
+    return out;
+}
+QVariantList PromptController::cameraPresets() const {
+    QVariantList out;
+    for (const auto &p : Camera::presets()) out << QVariantMap{{"id", p.id}, {"label", p.label}};
+    return out;
+}
+QString PromptController::cameraSummary() const { return Camera::summary(m_camera); }
+QString PromptController::cameraPreset() const {
+    for (const auto &p : Camera::presets()) if (p.values == m_camera) return p.id;
+    return {};
+}
+void PromptController::setCameraValue(const QString &id, const QString &value) {
+    bool known = false;
+    for (const auto &s : Camera::settings()) if (s.id == id) known = true;
+    if (!known) return;
+    if (value.isEmpty() || m_camera.value(id).toString() == value) m_camera.remove(id);
+    else m_camera.insert(id, value);
+    Prefs::setStudioCamera(m_camera);
+    emit cameraChanged();
+}
+void PromptController::applyCameraPreset(const QString &id) {
+    if (cameraPreset() == id) { clearCamera(); return; }
+    for (const auto &p : Camera::presets())
+        if (p.id == id) { m_camera = p.values; Prefs::setStudioCamera(m_camera); emit cameraChanged(); return; }
+}
+void PromptController::clearCamera() {
+    if (m_camera.isEmpty()) return;
+    m_camera.clear();
+    Prefs::setStudioCamera(m_camera);
+    emit cameraChanged();
+}
 
 // ── Boot ─────────────────────────────────────────────────────────────────
 void PromptController::boot() {
@@ -254,10 +277,36 @@ void PromptController::addProducts(const QList<QUrl> &urls) {
     });
 }
 
+// The background plate is optional and single: a second drop replaces the first. It travels to the engine as the
+// LAST reference image, after the garment photos.
+void PromptController::addBackground(const QList<QUrl> &urls) {
+    const QStringList files = imagePaths(urls);
+    if (files.isEmpty()) return;
+    if (files.size() > 1) push(QStringLiteral("Warning: only 1 background is used, took %1").arg(QFileInfo(files.first()).fileName()));
+    const QStringList first{files.first()};
+    m_pool.start([this, first] {
+        try {
+            const QStringList staged = Staging::stage(first);
+            post([this, staged] { m_backgrounds = staged; emit backgroundsChanged(); emit inputsChanged(); });
+        } catch (const Err &e) {
+            post([this, msg = e.msg] { push("Error: " + msg); });
+        }
+    });
+}
+
+// BrotherhoodStudioQt/look-library: location photos and streetwear references. Not bundled in the app (other people's photos); it lives on this Mac.
+QString PromptController::lookPath() const {
+    const QString dir = Paths::studioDir() + "/look-library";
+    QDir().mkpath(dir);
+    return dir;
+}
+
+void PromptController::removeBackground() { if (!m_backgrounds.isEmpty()) { m_backgrounds.clear(); emit backgroundsChanged(); emit inputsChanged(); } }
+
 void PromptController::removeRef(int i) { if (i >= 0 && i < m_refs.size()) { m_refs.removeAt(i); emit refsChanged(); emit inputsChanged(); } }
 void PromptController::removeProduct(int i) { if (i >= 0 && i < m_products.size()) { m_products.removeAt(i); emit productsChanged(); emit inputsChanged(); } }
 
-QString PromptController::inputSignature() const { return (m_refs + m_products + QStringList{m_refSpecs}).join('|'); }
+QString PromptController::inputSignature() const { return (m_refs + m_products + m_backgrounds + QStringList{m_refSpecs}).join('|'); }
 
 // ── Brief (stage 1, Sonnet) ──────────────────────────────────────────────
 void PromptController::autoWriteBrief() {
@@ -265,11 +314,11 @@ void PromptController::autoWriteBrief() {
     m_briefLoading = true; m_generateError.clear();
     emit briefLoadingChanged(); emit generateChanged(); emit inputsChanged();
     push(QStringLiteral("▶ Sonnet · writing brief..."));
-    const auto refs = m_refs, products = m_products;
+    const auto refs = m_refs, products = m_products, backgrounds = m_backgrounds;
     const auto specs = m_refSpecs, sig = inputSignature();
     m_pool.start([=, this] {
         try {
-            const QString text = ClaudeCli::generateBrief(refs, products, specs);
+            const QString text = ClaudeCli::generateBrief(refs, products, backgrounds, specs);
             post([=, this] {
                 m_briefLoading = false; setBrief(text);
                 m_autoBriefText = text; m_autoBriefSig = sig; m_hasAutoBrief = true;
@@ -292,8 +341,9 @@ void PromptController::generate() {
     m_generateStatus = 1; m_prompt.clear(); m_generateError.clear();
     emit generateChanged(); emit promptChanged(); emit inputsChanged(); emitOutputVisibility();
 
-    const auto refs = m_refs, products = m_products;
+    const auto refs = m_refs, products = m_products, backgrounds = m_backgrounds;
     const auto specs = m_refSpecs, sig = inputSignature();
+    const QString camera = Camera::block(m_camera);
     const QString typed = m_brief.trimmed();
     const bool stale = m_hasAutoBrief && m_autoBriefText == m_brief && m_autoBriefSig != sig;
 
@@ -302,7 +352,7 @@ void PromptController::generate() {
             QString description = typed;
             if (description.isEmpty() || stale) {
                 post([this] { m_generateStage = "Brief · Sonnet"; emit generateChanged(); push(QStringLiteral("▶ Sonnet · writing brief...")); });
-                description = ClaudeCli::generateBrief(refs, products, specs);
+                description = ClaudeCli::generateBrief(refs, products, backgrounds, specs);
                 post([=, this] {
                     setBrief(description);
                     m_autoBriefText = description; m_autoBriefSig = sig; m_hasAutoBrief = true;
@@ -310,7 +360,7 @@ void PromptController::generate() {
                 });
             }
             post([this] { m_generateStage = "Prompt · Opus"; emit generateChanged(); push(QStringLiteral("▶ Opus · writing prompt...")); });
-            const auto result = ClaudeCli::generatePrompt(refs, products, description, specs);
+            const auto result = ClaudeCli::generatePrompt(refs, products, backgrounds, description, specs, camera);
             post([=, this] {
                 m_prompt = result.prompt; m_memoryId = result.memoryId; m_generateStatus = 2; m_generateStage.clear();
                 emit promptChanged(); emit generateChanged(); emit inputsChanged(); emitOutputVisibility();
@@ -344,7 +394,8 @@ bool PromptController::fireGate() {
 void PromptController::fire() {
     if (!canFire() || !fireGate()) return;
     const QString prompt = m_prompt, ratio = m_ratio, res = m_resolution, quality = m_quality, memoryId = m_memoryId;
-    const QStringList products = m_products;
+    const QStringList products = m_products + m_backgrounds;      // the background goes last
+    const int nBackground = int(m_backgrounds.size());
     const int provider = m_provider, n = m_variations;
 
     m_tasks += 1;
@@ -357,7 +408,7 @@ void PromptController::fire() {
             // Refs are uploaded ONCE and shared across the parallel batch
             QStringList refIds;
             if (!products.isEmpty() && n > 1) {
-                const QStringList files = products.mid(0, 14);
+                const QStringList files = keepTail(products, nBackground, 14);
                 post([=, this] { push(QStringLiteral("Uploading %1 image%2...").arg(files.size()).arg(files.size() > 1 ? "s" : "")); });
                 QList<QFuture<QString>> ups;
                 for (const QString &f : files) ups << QtConcurrent::run(&m_pool, [f] { return Higgsfield::upload(f); });
@@ -367,7 +418,7 @@ void PromptController::fire() {
 
             QList<QFuture<bool>> jobs;
             for (int i = 0; i < n; ++i)
-                jobs << QtConcurrent::run(&m_pool, [=, this] { return runJob(prompt, products, ratio, res, quality, provider, refIds); });
+                jobs << QtConcurrent::run(&m_pool, [=, this] { return runJob(prompt, products, nBackground, ratio, res, quality, provider, refIds); });
             int succeeded = 0;
             for (auto &j : jobs) if (j.result()) ++succeeded;
 
@@ -396,18 +447,18 @@ void PromptController::fire() {
     });
 }
 
-bool PromptController::runJob(const QString &prompt, const QStringList &products, const QString &ratio, const QString &res,
+bool PromptController::runJob(const QString &prompt, const QStringList &products, int nBackground, const QString &ratio, const QString &res,
                               const QString &quality, int providerIndex, const QStringList &refIds) {
     const Provider &p = providers().at(providerIndex);
     const QString safeRatio = p.ratios.contains(ratio) ? ratio : p.ratios.first();
     const QString safeRes = p.resolutions.contains(res) ? res : p.resolutions.last();
     const QString safeQuality = p.qualities.contains(quality) ? quality : p.defaultQuality;
 
-    QStringList refs = refIds.mid(0, p.maxRefs);
+    QStringList refs = keepTail(refIds, nBackground, p.maxRefs);
     if (refs.isEmpty() && !products.isEmpty()) {
         if (products.size() > p.maxRefs)
-            post([=, this] { push(QStringLiteral("%1 accepts max %2 reference images, using the first %2").arg(p.label).arg(p.maxRefs)); });
-        refs = products.mid(0, p.maxRefs);
+            post([=, this] { push(QStringLiteral("%1 accepts max %2 reference images, using the first %3 garment photos and the background").arg(p.label).arg(p.maxRefs).arg(p.maxRefs - nBackground)); });
+        refs = keepTail(products, nBackground, p.maxRefs);
     }
 
     const QString detail = p.qualities.isEmpty() ? QString() : QStringLiteral(" · %1").arg(safeQuality);
@@ -446,9 +497,9 @@ bool PromptController::runJob(const QString &prompt, const QStringList &products
 
 // ── Reset / log / history ────────────────────────────────────────────────
 void PromptController::reset() {
-    m_refs.clear(); m_products.clear(); m_brief.clear(); m_refSpecs.clear(); m_hasAutoBrief = false;
+    m_refs.clear(); m_products.clear(); m_backgrounds.clear(); m_brief.clear(); m_refSpecs.clear(); m_hasAutoBrief = false;
     m_prompt.clear(); m_generateStatus = 0; m_memoryId.clear(); m_variations = 1; m_generateError.clear();
-    emit refsChanged(); emit productsChanged(); emit briefChanged(); emit refSpecsChanged(); emit promptChanged();
+    emit refsChanged(); emit productsChanged(); emit backgroundsChanged(); emit briefChanged(); emit refSpecsChanged(); emit promptChanged();
     emit generateChanged(); emit fireSettingsChanged(); emit inputsChanged();
     if (m_tasks == 0) { m_fireResult = 0; m_log.clear(); emit tasksChanged(); }
     emitOutputVisibility();

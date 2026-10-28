@@ -2,6 +2,7 @@
 """Regenerates src/prompt/prompts.cpp from the Swift build's Prompts.swift so both
 ports (and the Electron app) keep byte-identical system prompts."""
 import re, sys, pathlib
+sys.exit("OBSOLETE: prompts.cpp is maintained by hand now (the Swift/Electron sources are gone). Running this would overwrite it.")
 root = pathlib.Path(__file__).resolve().parent.parent
 swift = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else root.parent / "Brotherhood Studio/Studio/Prompt/Services/Prompts.swift"
 src = swift.read_text()

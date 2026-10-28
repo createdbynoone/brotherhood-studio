@@ -11,6 +11,7 @@
 #include "core/prefs.h"
 #include "platform/mac.h"
 #include "platform/memtrim.h"
+#include "ecom/ecomcontroller.h"
 #include "prompt/promptcontroller.h"
 #include "triage/thumbprovider.h"
 #include "triage/triagecontroller.h"
@@ -37,7 +38,7 @@ int main(int argc, char *argv[]) {
     QCommandLineParser cli;
     QCommandLineOption grab("grab", "Save a screenshot and quit.", "file");
     QCommandLineOption delay("delay", "Milliseconds to wait before the screenshot.", "ms", "1800");
-    QCommandLineOption layout("layout", "prompt | split | triage", "mode");
+    QCommandLineOption layout("layout", "prompt | ecom | split | triage", "mode");
     QCommandLineOption size("size", "Window size WxH.", "WxH", "1560x940");
     QCommandLineOption transition("transition", "Capture frames of a layout change: from:to:prefix", "spec");
     QCommandLineOption openOpt("open", "Open a dialog at startup (settings | palette), for design review.", "what");
@@ -56,8 +57,11 @@ int main(int argc, char *argv[]) {
 
     StudioController studio;
     PromptController prompt;
+    EcomController ecom;
     TriageController triage;
     QObject::connect(&prompt, &PromptController::saved, &triage, &TriageController::ingest);
+    QObject::connect(&ecom, &EcomController::saved, &triage, &TriageController::ingest);
+    QObject::connect(&ecom, &EcomController::charged, &prompt, &PromptController::refreshCredits);
     QObject::connect(&prompt, &PromptController::outputPathChanged, &triage, &TriageController::rescan);
     QObject::connect(&app, &QGuiApplication::aboutToQuit, &triage, &TriageController::flushNow);
     if (cli.isSet(layout)) studio.setLayout(cli.value(layout));
@@ -67,6 +71,7 @@ int main(int argc, char *argv[]) {
     engine.addImageProvider("full", new ThumbProvider(true));
     engine.rootContext()->setContextProperty("studio", &studio);
     engine.rootContext()->setContextProperty("prompt", &prompt);
+    engine.rootContext()->setContextProperty("ecom", &ecom);
     engine.rootContext()->setContextProperty("triage", &triage);
     engine.rootContext()->setContextProperty("grabSize", cli.value(size));
     engine.rootContext()->setContextProperty("brandFamily", brandFamily);

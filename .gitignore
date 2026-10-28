@@ -4,3 +4,5 @@ dist/
 .DS_Store
 # Brand font (licensed): kept local, not committed. The app falls back to Geist Bold when it is missing.
 resources/fonts/Sequel100Black-75.ttf
+# Ecommerce house-style library (the brand's own catalog photos): bundled in local builds, not committed.
+resources/ecom-style/

@@ -1,5 +1,6 @@
 #pragma once
 #include <QString>
+#include <QVariantMap>
 
 // Each accessor reads/writes only its own key and keeps every other key in the file untouched,
 // so the Electron and SwiftUI builds never lose settings this app doesn't know about.
@@ -19,11 +20,13 @@ void setSorterGridSize(double v);
 void setSorterInspectorOpen(bool v);
 
 // studio-prefs.json (this app only)
-QString studioLayout();                    // "prompt" | "split" | "triage"
+QString studioLayout();                    // "prompt" | "ecom" | "split" | "triage"
 double studioSplitFraction();
 void setStudioLayout(const QString &layout);
 void setStudioSplitFraction(double v);
 /// Interface scale in percent (100, 90, 80, 70, 60, 50). Read before QGuiApplication exists: it sets QT_SCALE_FACTOR.
+QVariantMap studioCamera();             // Marketing Prompts camera settings (empty values = auto)
+void setStudioCamera(const QVariantMap &camera);
 int studioUiScale();
 void setStudioUiScale(int percent);
 

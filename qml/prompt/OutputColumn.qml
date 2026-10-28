@@ -83,7 +83,7 @@ Item {
             spacing: 12
             anchors.horizontalCenter: parent.horizontalCenter
             Repeater {
-                model: ["Drop one reference and the product", "Add specs, or let Sonnet write the brief", "Generate with Opus, then fire to Higgsfield"]
+                model: ["Drop one reference and the product", "Add a real background photo (optional, recommended)", "Add specs, or let Sonnet write the brief", "Generate with Opus, then fire to Higgsfield"]
                 delegate: Row {
                     required property string modelData
                     required property int index

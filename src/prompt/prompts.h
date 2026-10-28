@@ -2,5 +2,5 @@
 #include <QString>
 
 namespace Prompts {
-extern const QString system, engineNote, referenceProtocol, briefSystem;
+extern const QString system, engineNote, referenceProtocol, backgroundProtocol, realismProtocol, briefSystem;
 }

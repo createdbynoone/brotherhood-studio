@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(BrotherhoodStudio VERSION 1.1.3 LANGUAGES CXX OBJCXX)
+project(BrotherhoodStudio VERSION 1.2.0 LANGUAGES CXX OBJCXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,6 +20,7 @@ set(APP_SOURCES
     src/platform/memtrim.cpp
     src/prompt/shell.cpp
     src/prompt/prompts.cpp
+    src/prompt/camera.cpp
     src/prompt/memorystore.cpp
     src/prompt/higgsfield.cpp
     src/prompt/claude.cpp
@@ -27,6 +28,9 @@ set(APP_SOURCES
     src/prompt/downloader.cpp
     src/prompt/logmodel.cpp
     src/prompt/promptcontroller.cpp
+    src/ecom/ecomprompts.cpp
+    src/ecom/ecomstyle.cpp
+    src/ecom/ecomcontroller.cpp
     src/triage/triagetypes.cpp
     src/triage/entryitem.cpp
     src/triage/modeldetect.cpp
@@ -65,6 +69,13 @@ file(GLOB_RECURSE ASSET_FILES CONFIGURE_DEPENDS
     ${CMAKE_SOURCE_DIR}/resources/fonts/*.ttf
     ${CMAKE_SOURCE_DIR}/resources/images/*.svg
     ${CMAKE_SOURCE_DIR}/resources/images/*.png)
+# The Ecommerce house-style library (the brand's own catalog photos) is bundled in local builds only: tools/release.sh
+# turns it off because release zips are public. The app copies it once to Application Support and the user adds drops there.
+option(BS_BUNDLE_ECOM_STYLE "Bundle resources/ecom-style in the app" ON)
+if(BS_BUNDLE_ECOM_STYLE)
+    file(GLOB_RECURSE ECOM_STYLE_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/resources/ecom-style/*/*.jpg)
+    list(APPEND ASSET_FILES ${ECOM_STYLE_FILES})
+endif()
 qt_add_resources(BrotherhoodStudio assets PREFIX "/assets" BASE ${CMAKE_SOURCE_DIR}/resources FILES ${ASSET_FILES})
 
 target_link_libraries(BrotherhoodStudio PRIVATE

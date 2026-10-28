@@ -6,6 +6,7 @@ import QtQuick.Controls.Basic
 Rectangle {
     id: root
     property int running: 0
+    property var logModel: prompt.log
     signal clear()
 
     readonly property color ink: "#8FD3A2"          // ordinary lines
@@ -64,7 +65,7 @@ Rectangle {
             width: parent.width
             height: parent.height - 35
             clip: true
-            model: prompt.log
+            model: root.logModel
             spacing: 2
             topMargin: 14; bottomMargin: 12
             boundsBehavior: Flickable.StopAtBounds

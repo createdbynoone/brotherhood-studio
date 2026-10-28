@@ -8,7 +8,7 @@ class QNetworkAccessManager;
 // The two panes keep their own controllers so a log line in BMP never touches the Sorter grid.
 class StudioController : public QObject {
     Q_OBJECT
-    Q_PROPERTY(QString layout READ layout WRITE setLayout NOTIFY layoutChanged)       // "prompt" | "split" | "triage"
+    Q_PROPERTY(QString layout READ layout WRITE setLayout NOTIFY layoutChanged)       // "prompt" | "ecom" | "split" | "triage"
     Q_PROPERTY(double splitFraction READ splitFraction WRITE setSplitFraction NOTIFY splitFractionChanged)
     Q_PROPERTY(QString activePane READ activePane WRITE setActivePane NOTIFY activePaneChanged)
     Q_PROPERTY(bool unlocked READ unlocked NOTIFY unlockedChanged)

@@ -1,6 +1,7 @@
 import QtQuick
+import QtQuick.Dialogs
 
-// Reference, product and brief, then the Generate button.
+// Reference, product, background, camera and brief, then the Generate button.
 Column {
     id: root
     spacing: Theme.s12
@@ -67,6 +68,57 @@ Column {
             }
         }
     }
+
+    FileDialog {
+        id: libraryPicker
+        title: "Look library"
+        currentFolder: Theme.fileUrl(prompt.lookPath)
+        nameFilters: ["Images (*.jpg *.jpeg *.png *.webp *.heic)"]
+        onAccepted: prompt.addBackground(selectedFiles)
+    }
+
+    Card {
+        width: parent.width
+        Column {
+            width: parent.width
+            spacing: 10
+            Item {
+                width: parent.width
+                height: 24
+                Row {
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    Txt { text: "Background"; variant: "heading" }
+                    Txt { text: "optional · recommended"; variant: "caption"; muted: true; anchors.baseline: parent.children[0].baseline }
+                }
+                Btn {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    kind: "ghost"; size: "xs"; icon: "folder-open"; text: "Library"
+                    tip: "Pick a location from your look library"
+                    onClicked: libraryPicker.open()
+                }
+            }
+            DropTile {
+                width: parent.width
+                mode: "single"
+                emptyHeight: 96; filledHeight: 180
+                placeholder: "Drop a photo of the real location"
+                hint: prompt.backgrounds.length === 0 ? "Without one, the scene is invented from the brief" : "or click to browse"
+                files: prompt.backgrounds
+                onDropped: urls => prompt.addBackground(urls)
+                onRemoved: prompt.removeBackground()
+            }
+            Txt {
+                visible: prompt.backgrounds.length > 0
+                width: parent.width
+                text: "The garment is placed inside this exact place and lit by its light."
+                variant: "caption"; muted: true; wrapMode: Text.Wrap
+            }
+        }
+    }
+
+    CameraCard { width: parent.width }
 
     Card {
         width: parent.width

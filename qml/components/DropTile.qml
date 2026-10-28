@@ -7,11 +7,14 @@ Item {
     property var files: []
     property string mode: "multi"
     property string placeholder: "Drop an image"
+    property string hint: "or click to browse"
+    property int emptyHeight: 120
+    property int filledHeight: 220
     signal dropped(var urls)
     signal removed(int index)
 
     readonly property bool hasFiles: files.length > 0
-    implicitHeight: mode === "single" ? (hasFiles ? 220 : 120) : (hasFiles ? flow.implicitHeight : 96)
+    implicitHeight: mode === "single" ? (hasFiles ? filledHeight : emptyHeight) : (hasFiles ? flow.implicitHeight : 96)
 
     FileDialog {
         id: picker
@@ -35,7 +38,7 @@ Item {
             spacing: 8
             Icon { name: "image"; size: 22; color: drop.containsDrag ? Theme.accent : Theme.textMuted; anchors.horizontalCenter: parent.horizontalCenter }
             Txt { text: root.placeholder; variant: "small"; dim: true; anchors.horizontalCenter: parent.horizontalCenter }
-            Txt { text: "or click to browse"; variant: "caption"; muted: true; anchors.horizontalCenter: parent.horizontalCenter }
+            Txt { text: root.hint; variant: "caption"; muted: true; anchors.horizontalCenter: parent.horizontalCenter }
         }
         HoverHandler { id: emptyHover; cursorShape: Qt.PointingHandCursor }
         TapHandler { onTapped: picker.open() }

@@ -26,7 +26,7 @@ static const char *kRepo = "createdbynoone/brotherhood-studio";
 
 StudioController::StudioController(QObject *parent) : QObject(parent) {
     m_layout = Prefs::studioLayout();
-    if (m_layout != "prompt" && m_layout != "triage") m_layout = "split";
+    if (m_layout != "prompt" && m_layout != "triage" && m_layout != "ecom") m_layout = "split";
     m_split = qBound(0.25, Prefs::studioSplitFraction(), 0.75);
     m_active = m_layout == "triage" ? "triage" : "prompt";
     m_unlocked = AppLock::isRemembered();
@@ -40,7 +40,7 @@ QString StudioController::version() const { return QCoreApplication::application
 double StudioController::lockUntil() const { return AppLock::lockUntil(); }
 
 void StudioController::setLayout(const QString &l) {
-    if (l == m_layout || (l != "prompt" && l != "split" && l != "triage")) return;
+    if (l == m_layout || (l != "prompt" && l != "split" && l != "triage" && l != "ecom")) return;
     m_layout = l;
     if (l == "prompt") setActivePane("prompt"); else if (l == "triage") setActivePane("triage");
     Prefs::setStudioLayout(l);

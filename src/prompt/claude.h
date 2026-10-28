@@ -10,9 +10,14 @@
 namespace ClaudeCli {
 
 bool isInstalled();
-QString generateBrief(const QStringList &refs, const QStringList &products, const QString &specs);
+QString generateBrief(const QStringList &refs, const QStringList &products, const QStringList &backgrounds, const QString &specs);
 
 struct PromptResult { QString prompt; QString memoryId; };
-PromptResult generatePrompt(const QStringList &refs, const QStringList &products, const QString &description, const QString &specs);
+PromptResult generatePrompt(const QStringList &refs, const QStringList &products, const QStringList &backgrounds, const QString &description, const QString &specs, const QString &camera = QString());
+
+
+/// Ecommerce: one Opus call that looks at the garment photo (and an optional layout reference) and returns the
+/// validated JSON specification (as the model wrote it). Throws when the answer is not a JSON object.
+QString generateEcomSpec(const QStringList &photos, const QString &layoutRef, const QString &notes, int width, int height, bool wantBack);
 
 }

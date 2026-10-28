@@ -3,6 +3,8 @@ import QtQuick
 // Engine, ratio, resolution and variations, then the fire button. Always pinned at the bottom of the pane.
 Rectangle {
     id: root
+    property var ctl: prompt              // the controller this dock fires (Prompts or Ecommerce)
+    property bool choosable: true         // false: the engine and ratio are fixed (Ecommerce), so their pickers are hidden
     color: Theme.surface
     implicitHeight: col.implicitHeight + Theme.s12 * 2
     Hairline { anchors.top: parent.top }
@@ -17,57 +19,59 @@ Rectangle {
             width: parent.width
             spacing: Theme.s16
             LabeledSegment {
+                visible: root.choosable
                 title: "Engine"
-                options: prompt.providerNames.map((n, i) => ({ key: i, label: n }))
-                current: prompt.providerIndex
-                onPicked: key => prompt.providerIndex = key
+                options: ctl.providerNames.map((n, i) => ({ key: i, label: n }))
+                current: ctl.providerIndex
+                onPicked: key => ctl.providerIndex = key
             }
             LabeledSegment {
-                title: "Ratio"
-                options: prompt.ratios.map(r => ({ key: r, label: r }))
-                current: prompt.aspectRatio
-                onPicked: key => prompt.aspectRatio = key
+                visible: root.choosable
+                title: "Ratio" + (ctl.aspectRatio === "auto" ? " (" + ctl.effectiveRatio + ")" : "")
+                options: ctl.ratios.map(r => ({ key: r, label: r === "auto" ? "Auto" : r }))
+                current: ctl.aspectRatio
+                onPicked: key => ctl.aspectRatio = key
             }
             LabeledSegment {
                 title: "Resolution"
-                options: prompt.resolutions.map(r => ({ key: r, label: r.toUpperCase() }))
-                current: prompt.resolution
-                onPicked: key => prompt.resolution = key
+                options: ctl.resolutions.map(r => ({ key: r, label: r.toUpperCase() }))
+                current: ctl.resolution
+                onPicked: key => ctl.resolution = key
             }
             LabeledSegment {
-                visible: prompt.qualities.length > 0
+                visible: ctl.qualities.length > 0
                 title: "Quality"
-                options: prompt.qualities.map(q => ({ key: q, label: q === "xhigh" ? "XHIGH" : q === "medium" ? "MED" : q.toUpperCase() }))
-                current: prompt.quality
-                onPicked: key => prompt.quality = key
+                options: ctl.qualities.map(q => ({ key: q, label: q === "xhigh" ? "XHIGH" : q === "medium" ? "MED" : q.toUpperCase() }))
+                current: ctl.quality
+                onPicked: key => ctl.quality = key
             }
             LabeledSegment {
                 title: "Variations"
                 options: [1, 2, 3, 4].map(n => ({ key: n, label: "×" + n }))
-                current: prompt.variations
-                onPicked: key => prompt.variations = key
+                current: ctl.variations
+                onPicked: key => ctl.variations = key
             }
         }
 
         Btn {
             width: parent.width
             kind: "primary"; size: "l"
-            readonly property int st: prompt.fireStatus
+            readonly property int st: ctl.fireStatus
             // what this batch will cost (price per image x variations), from `higgsfield generate cost`
-            readonly property string price: prompt.costKnown && prompt.fireCost > 0
-                ? "  ·  " + (prompt.fireCost % 1 === 0 ? prompt.fireCost : prompt.fireCost.toFixed(2).replace(/0$/, "")) + " cr" : ""
+            readonly property string price: ctl.costKnown && ctl.fireCost > 0
+                ? "  ·  " + (ctl.fireCost % 1 === 0 ? ctl.fireCost : ctl.fireCost.toFixed(2).replace(/0$/, "")) + " cr" : ""
             tint: st === 2 ? Theme.ok : st === 3 ? Theme.danger : "transparent"
             icon: st === 1 ? "" : st === 2 ? "check-circle" : st === 3 ? "warning-circle" : "lightning"
             iconWeight: "fill"
             busy: st === 1
-            text: st === 1 ? "Generating" + (prompt.tasks > 1 ? " ×" + prompt.tasks : "") + (enabled ? "  ·  fire again" + price : "")
+            text: st === 1 ? "Generating" + (ctl.tasks > 1 ? " ×" + ctl.tasks : "") + (enabled ? "  ·  fire again" + price : "")
                 : st === 2 ? "Done  ·  fire again" + price
                 : st === 3 ? "Error  ·  retry" + price
-                : "Fire to " + prompt.providerLabel + (prompt.variations > 1 ? "  ×" + prompt.variations : "") + price
-            enabled: prompt.canFire
+                : "Fire to " + ctl.providerLabel + (ctl.variations > 1 ? "  ×" + ctl.variations : "") + price
+            enabled: ctl.canFire
             hint: "⌘⇧↩"
-            tip: st === 1 && enabled ? "The task keeps running in the background. Click to fire another batch in parallel" : "Send the prompt to Higgsfield"
-            onClicked: prompt.fire()
+            tip: st === 1 && enabled ? "The task keeps running in the background. Click to fire another batch in parallel" : "Send to Higgsfield"
+            onClicked: ctl.fire()
         }
     }
 }

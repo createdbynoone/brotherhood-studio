@@ -11,8 +11,12 @@ Item {
         if (startOpen === "settings") settings.open()
         else if (startOpen === "palette") palette.show()
         else if (startOpen === "log") prompt.demoLog()
+        else if (startOpen === "ecom") ecom.demo()
         else if (startOpen === "focus") Qt.callLater(() => focusTimer.start())
     }
+    readonly property bool promptVisible: studio.layout === "prompt" || studio.layout === "split"
+    readonly property bool sorterVisible: studio.layout === "split" || studio.layout === "triage"
+    readonly property bool ecomVisible: studio.layout === "ecom"
     Timer { id: focusTimer; interval: 1800; onTriggered: { triage.moveAnchor(1, 0); triage.openFocus() } }
 
     // New versions are picked up while the app stays open (it used to check only at launch)
@@ -30,6 +34,7 @@ Item {
     function nameFilter(i) { return ["All", "Unsorted", "Keep", "Maybe", "Discard", "Archived"][i] }
     readonly property var commands: [
         { title: "Show Marketing Prompts only", group: "View", hint: "⌘1", icon: "square-half", run: () => studio.layout = "prompt" },
+        { title: "Show Ecommerce only", group: "View", hint: "⌘4", icon: "square-half", run: () => studio.layout = "ecom" },
         { title: "Show both panes", group: "View", hint: "⌘2", icon: "columns", run: () => studio.layout = "split" },
         { title: "Show Generation Sorter only", group: "View", hint: "⌘3", icon: "square-half", run: () => studio.layout = "triage" },
         { title: "Switch pane", group: "View", hint: "⌃Tab", icon: "swap", run: () => studio.cyclePane() },
@@ -40,6 +45,9 @@ Item {
         { title: "Reset inputs", group: "Marketing Prompts", hint: "⌘⇧K", icon: "arrow-counter-clockwise", run: () => prompt.reset() },
         { title: "Copy prompt", group: "Marketing Prompts", hint: "⌘⇧C", icon: "copy", run: () => studio.copyText(prompt.prompt) },
         { title: "Open output folder", group: "Marketing Prompts", hint: "⌘⇧O", icon: "folder-open", run: () => studio.openFolder(prompt.outputPath) },
+        { title: "Analyze photo", group: "Ecommerce", hint: "⌘↩", icon: "magic-wand", run: () => { studio.layout = "ecom"; ecom.analyze() } },
+        { title: "Fire Ecommerce JSON to Higgsfield", group: "Ecommerce", hint: "⌘⇧↩", icon: "lightning", run: () => ecom.fire() },
+        { title: "Open Ecommerce results folder", group: "Ecommerce", icon: "folder-open", run: () => studio.openFolder(ecom.resultsPath) },
         { title: "Rescan output folder", group: "Generation Sorter", hint: "⌘⌥R", icon: "arrow-clockwise", run: () => triage.rescan() },
         { title: "Import a folder", group: "Generation Sorter", hint: "⌘I", icon: "folder-plus", run: () => triagePane.requestImport() },
         { title: "Select all", group: "Generation Sorter", hint: "⌘A", icon: "check", run: () => triage.selectAll() },
@@ -60,19 +68,20 @@ Item {
     Shortcut { sequences: ["Ctrl+1"]; onActivated: studio.layout = "prompt" }
     Shortcut { sequences: ["Ctrl+2"]; onActivated: studio.layout = "split" }
     Shortcut { sequences: ["Ctrl+3"]; onActivated: studio.layout = "triage" }
+    Shortcut { sequences: ["Ctrl+4"]; onActivated: studio.layout = "ecom" }
     Shortcut { sequences: ["Meta+Tab"]; onActivated: studio.cyclePane() }
-    Shortcut { sequences: ["Ctrl+Return", "Ctrl+Enter"]; enabled: studio.layout !== "triage"; onActivated: prompt.generate() }
-    Shortcut { sequences: ["Ctrl+Shift+Return", "Ctrl+Shift+Enter"]; enabled: studio.layout !== "triage"; onActivated: prompt.fire() }
-    Shortcut { sequences: ["Ctrl+Y"]; enabled: studio.layout !== "triage"; onActivated: history.open() }
-    Shortcut { sequences: ["Ctrl+Shift+K"]; onActivated: prompt.reset() }
-    Shortcut { sequences: ["Ctrl+Shift+C"]; enabled: prompt.prompt.length > 0; onActivated: studio.copyText(prompt.prompt) }
+    Shortcut { sequences: ["Ctrl+Return", "Ctrl+Enter"]; enabled: view.promptVisible || view.ecomVisible; onActivated: view.ecomVisible ? ecom.analyze() : prompt.generate() }
+    Shortcut { sequences: ["Ctrl+Shift+Return", "Ctrl+Shift+Enter"]; enabled: view.promptVisible || view.ecomVisible; onActivated: view.ecomVisible ? ecom.fire() : prompt.fire() }
+    Shortcut { sequences: ["Ctrl+Y"]; enabled: view.promptVisible; onActivated: history.open() }
+    Shortcut { sequences: ["Ctrl+Shift+K"]; onActivated: view.ecomVisible ? ecom.reset() : prompt.reset() }
+    Shortcut { sequences: ["Ctrl+Shift+C"]; enabled: view.ecomVisible ? ecom.json.length > 0 : prompt.prompt.length > 0; onActivated: studio.copyText(view.ecomVisible ? ecom.json : prompt.prompt) }
     Shortcut { sequences: ["Ctrl+Shift+O"]; onActivated: studio.openFolder(prompt.outputPath) }
     Shortcut { sequences: ["Ctrl+,"]; onActivated: settings.open() }
-    Shortcut { sequences: ["Ctrl+I"]; enabled: studio.layout !== "prompt"; onActivated: triagePane.requestImport() }
-    Shortcut { sequences: ["Ctrl+Alt+R"]; enabled: studio.layout !== "prompt"; onActivated: triage.rescan() }
-    Shortcut { sequences: ["Ctrl+Shift+R"]; enabled: studio.layout !== "prompt" && triage.anchorEntry !== null; onActivated: triage.reveal(triage.anchorEntry.path) }
-    Shortcut { sequences: ["Ctrl+Shift+D"]; enabled: studio.layout !== "prompt"; onActivated: triage.clearSelection() }
-    Shortcut { sequences: ["Ctrl+Backspace"]; enabled: studio.layout !== "prompt" && (triage.statusCounts[3] || 0) > 0; onActivated: triagePane.requestTrash() }
+    Shortcut { sequences: ["Ctrl+I"]; enabled: view.sorterVisible; onActivated: triagePane.requestImport() }
+    Shortcut { sequences: ["Ctrl+Alt+R"]; enabled: view.sorterVisible; onActivated: triage.rescan() }
+    Shortcut { sequences: ["Ctrl+Shift+R"]; enabled: view.sorterVisible && triage.anchorEntry !== null; onActivated: triage.reveal(triage.anchorEntry.path) }
+    Shortcut { sequences: ["Ctrl+Shift+D"]; enabled: view.sorterVisible; onActivated: triage.clearSelection() }
+    Shortcut { sequences: ["Ctrl+Backspace"]; enabled: view.sorterVisible && (triage.statusCounts[3] || 0) > 0; onActivated: triagePane.requestTrash() }
     Shortcut { sequences: ["Ctrl+Esc"]; enabled: triage.focusIndex >= 0; onActivated: triage.closeFocus() }
 
     // True when (sx, sy), in window (scene) coordinates, is title-bar space where a native drag may start. Qt leaves a
@@ -98,16 +107,35 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 14
             BrandMark { size: 34; anchors.verticalCenter: parent.verticalCenter }
-            Wordmark { visible: view.width >= 1420; size: 19; anchors.verticalCenter: parent.verticalCenter }
+            // hidden below 1520: the Split button sits left of the mode switch and would cover it
+            Wordmark { visible: view.width >= 1520; size: 19; anchors.verticalCenter: parent.verticalCenter }
         }
 
         Segment {
+            id: modeSwitch
             anchors.centerIn: parent
             height_: 40; fontSize: 12; hPad: 22; gap: 6; inset: 4; heading: true
-            options: view.width >= 1080 ? [{ key: "prompt", label: "Marketing Prompts" }, { key: "split", label: "Split" }, { key: "triage", label: "Generation Sorter" }]
-                                        : [{ key: "prompt", label: "Prompts" }, { key: "split", label: "Split" }, { key: "triage", label: "Sorter" }]
+            options: view.width >= 1320 ? [{ key: "prompt", label: "Marketing Prompts" }, { key: "ecom", label: "Ecommerce" }, { key: "triage", label: "Generation Sorter" }]
+                                        : [{ key: "prompt", label: "Prompts" }, { key: "ecom", label: "Ecom" }, { key: "triage", label: "Sorter" }]
             current: studio.layout
             onPicked: key => studio.layout = key
+        }
+
+        // Split (Prompts + Sorter side by side): its own orange button beside the mode switch
+        Rectangle {
+            id: splitBtn
+            readonly property bool on: studio.layout === "split"
+            anchors.right: modeSwitch.left; anchors.rightMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+            width: 40; height: 40
+            radius: Theme.rControl
+            color: on ? Theme.alpha(Theme.accent, 0.16) : (splitHover.hovered ? Theme.alpha(Theme.accent, 0.10) : Theme.surface)
+            border.color: on || splitHover.hovered ? Theme.accent : Theme.hairline
+            Behavior on color { ColorAnimation { duration: Theme.fast } }
+            Icon { anchors.centerIn: parent; name: "columns"; weight: splitBtn.on ? "fill" : "bold"; size: 20; color: Theme.accent }
+            HoverHandler { id: splitHover; cursorShape: Qt.PointingHandCursor }
+            TapHandler { onTapped: studio.layout = "split" }
+            Tip { target: splitBtn; text: "Split: Prompts and Sorter together"; hint: "⌘2" }
         }
 
         Row {
@@ -199,13 +227,16 @@ Item {
 
         readonly property real minLeft: 400
         readonly property real minRight: 460
-        readonly property bool both: studio.layout === "split"
-        readonly property real target: studio.layout === "prompt" ? width
-            : studio.layout === "triage" ? 0
+        readonly property bool both: underLayout === "split"
+        // Ecommerce is a cover over this area: underneath, the panes keep the layout they had
+        readonly property string underLayout: studio.layout === "ecom" ? view.lastMain : studio.layout
+        readonly property real target: underLayout === "prompt" ? width
+            : underLayout === "triage" ? 0
             : Math.min(Math.max(width * studio.splitFraction, minLeft), Math.max(minLeft, width - minRight - 1))
         property real leftW: target
+        visible: !view.ecomShown
         Behavior on leftW {
-            enabled: !divider.dragging
+            enabled: !divider.dragging && !view.ecomShown
             NumberAnimation { id: paneGlide; duration: Theme.slow; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curveLayout }
         }
         readonly property bool gliding: paneGlide.running
@@ -220,7 +251,7 @@ Item {
                 x: 0; height: parent.height
                 width: Math.max(leftBox.width, split.minLeft)
                 modeWidth: split.target
-                active: studio.layout === "split" && studio.activePane === "prompt"
+                active: split.both && studio.activePane === "prompt"
                 onOpenHistory: history.open()
                 TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; grabPermissions: PointerHandler.ApprovesTakeOverByAnything; onPressedChanged: if (pressed) studio.activePane = "prompt" }
             }
@@ -262,7 +293,7 @@ Item {
                 anchors.right: parent.right
                 height: parent.height
                 width: Math.max(rightBox.width, split.minRight)
-                active: studio.layout === "split" && studio.activePane === "triage"
+                active: split.both && studio.activePane === "triage"
                 id: triagePane
                 freezeLayout: split.gliding
                 TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; grabPermissions: PointerHandler.ApprovesTakeOverByAnything; onPressedChanged: if (pressed) studio.activePane = "triage" }
@@ -276,6 +307,32 @@ Item {
         }
     }
 
+    // ── Ecommerce: a third pane that covers the two others ───────────────
+    // The swap happens behind a short veil of the background color (no opacity animation on the panes themselves).
+    property string lastMain: studio.layout === "ecom" ? "split" : studio.layout
+    property bool ecomShown: studio.layout === "ecom"
+    Connections {
+        target: studio
+        function onLayoutChanged() {
+            if (studio.layout !== "ecom") view.lastMain = studio.layout
+            if ((studio.layout === "ecom") !== view.ecomShown) swapEcom.restart()
+        }
+    }
+    SequentialAnimation {
+        id: swapEcom
+        NumberAnimation { target: ecomVeil; property: "opacity"; to: 1; duration: Theme.ms(90); easing.type: Easing.OutCubic }
+        ScriptAction { script: view.ecomShown = studio.layout === "ecom" }
+        NumberAnimation { target: ecomVeil; property: "opacity"; to: 0; duration: Theme.ms(220); easing.type: Easing.InOutCubic }
+    }
+    Item {
+        id: ecomBox
+        y: split.y; width: parent.width; height: split.height
+        visible: view.ecomShown
+        clip: true
+        EcomPane { anchors.fill: parent }
+    }
+    Rectangle { id: ecomVeil; y: split.y; width: parent.width; height: split.height; color: Theme.bg; opacity: 0; visible: opacity > 0.01; z: 6 }
+
     // ── Footer ───────────────────────────────────────────────────────────
     Rectangle {
         id: footer
@@ -288,9 +345,10 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 10
             visible: studio.layout !== "triage"
-            Txt { text: prompt.providerLabel + "  " + prompt.aspectRatio + "  " + prompt.resolution.toUpperCase(); variant: "caption"; muted: true; font.family: Theme.mono }
-            Txt { visible: prompt.memoryTotal > 0; text: prompt.memoryTotal + " in memory"; variant: "caption"; muted: true }
-            Txt { visible: prompt.memoryTotal > 0; text: "★ " + prompt.memoryFired + " fired"; variant: "caption"; color: Theme.alpha(Theme.accent, 0.8) }
+            Txt { visible: !view.ecomVisible; text: prompt.providerLabel + "  " + prompt.aspectRatio + "  " + prompt.resolution.toUpperCase(); variant: "caption"; muted: true; font.family: Theme.mono }
+            Txt { visible: view.ecomVisible; text: ecom.providerLabel + "  " + ecom.effectiveRatio + "  " + ecom.resolution.toUpperCase(); variant: "caption"; muted: true; font.family: Theme.mono }
+            Txt { visible: !view.ecomVisible && prompt.memoryTotal > 0; text: prompt.memoryTotal + " in memory"; variant: "caption"; muted: true }
+            Txt { visible: !view.ecomVisible && prompt.memoryTotal > 0; text: "★ " + prompt.memoryFired + " fired"; variant: "caption"; color: Theme.alpha(Theme.accent, 0.8) }
         }
         Row {
             anchors.right: parent.right; anchors.rightMargin: 14
@@ -298,7 +356,7 @@ Item {
             spacing: 12
             visible: true
             Row {
-                visible: studio.layout !== "prompt"
+                visible: view.sorterVisible
                 spacing: 10
                 Txt { text: triage.totalCount + " total"; variant: "caption"; muted: true }
                 Txt { visible: (triage.statusCounts[1] || 0) > 0; text: triage.statusCounts[1] + " keep"; variant: "caption"; color: Theme.alpha(Theme.ok, 0.85) }

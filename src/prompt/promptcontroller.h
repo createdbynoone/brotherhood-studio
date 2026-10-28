@@ -8,6 +8,8 @@
 class QTimer;
 #include <QVariantList>
 
+#include <QVariantMap>
+
 #include "logmodel.h"
 
 // The BMP pane's state and actions: inputs -> two-stage prompt (Sonnet brief, Opus prompt) -> fire
@@ -16,6 +18,13 @@ class PromptController : public QObject {
     Q_OBJECT
     Q_PROPERTY(QStringList refs READ refs NOTIFY refsChanged)
     Q_PROPERTY(QStringList products READ products NOTIFY productsChanged)
+    Q_PROPERTY(QString lookPath READ lookPath CONSTANT)                              // folder of reference photos to pick backgrounds from
+    Q_PROPERTY(QStringList backgrounds READ backgrounds NOTIFY backgroundsChanged)   // optional location photo (at most one)
+    Q_PROPERTY(QVariantList cameraSettings READ cameraSettings CONSTANT)             // [{id, title, options: [...]}] for the Camera card
+    Q_PROPERTY(QVariantList cameraPresets READ cameraPresets CONSTANT)               // [{id, label}]
+    Q_PROPERTY(QVariantMap camera READ camera NOTIFY cameraChanged)                  // chosen values by setting id (missing = auto)
+    Q_PROPERTY(QString cameraSummary READ cameraSummary NOTIFY cameraChanged)
+    Q_PROPERTY(QString cameraPreset READ cameraPreset NOTIFY cameraChanged)          // id of the preset the values match, else empty
     Q_PROPERTY(QString brief READ brief WRITE setBrief NOTIFY briefChanged)
     Q_PROPERTY(QString refSpecs READ refSpecs WRITE setRefSpecs NOTIFY refSpecsChanged)
     Q_PROPERTY(QString prompt READ prompt NOTIFY promptChanged)
@@ -58,6 +67,13 @@ public:
 
     QStringList refs() const { return m_refs; }
     QStringList products() const { return m_products; }
+    QStringList backgrounds() const { return m_backgrounds; }
+    QString lookPath() const;
+    QVariantList cameraSettings() const;
+    QVariantList cameraPresets() const;
+    QVariantMap camera() const { return m_camera; }
+    QString cameraSummary() const;
+    QString cameraPreset() const;
     QString brief() const { return m_brief; }
     void setBrief(const QString &b);
     QString refSpecs() const { return m_refSpecs; }
@@ -108,6 +124,11 @@ public:
     Q_INVOKABLE void addProducts(const QList<QUrl> &urls);
     Q_INVOKABLE void removeRef(int index);
     Q_INVOKABLE void removeProduct(int index);
+    Q_INVOKABLE void addBackground(const QList<QUrl> &urls);
+    Q_INVOKABLE void removeBackground();
+    Q_INVOKABLE void setCameraValue(const QString &id, const QString &value);   // picking the chosen value again clears it (auto)
+    Q_INVOKABLE void applyCameraPreset(const QString &id);                      // picking the active preset clears everything
+    Q_INVOKABLE void clearCamera();
     Q_INVOKABLE void autoWriteBrief();
     Q_INVOKABLE void generate();
     Q_INVOKABLE void fire();
@@ -124,7 +145,9 @@ public:
 signals:
     void refsChanged();
     void productsChanged();
+    void backgroundsChanged();
     void briefChanged();
+    void cameraChanged();
     void refSpecsChanged();
     void promptChanged();
     void generateChanged();
@@ -149,7 +172,7 @@ private:
     void post(std::function<void()> fn);
     QString inputSignature() const;
     bool fireGate();
-    bool runJob(const QString &prompt, const QStringList &products, const QString &ratio, const QString &res,
+    bool runJob(const QString &prompt, const QStringList &products, int nBackground, const QString &ratio, const QString &res,
                 const QString &quality, int provider, const QStringList &refIds);
     void scheduleCost();
     void estimateCost();
@@ -160,8 +183,9 @@ private:
     QThreadPool m_pool;
     LogModel m_log;
 
-    QStringList m_refs, m_products;
+    QStringList m_refs, m_products, m_backgrounds;
     QString m_brief, m_refSpecs, m_prompt;
+    QVariantMap m_camera;
     int m_generateStatus = 0;
     QString m_generateError, m_generateStage;
     bool m_briefLoading = false;
